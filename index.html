@@ -6,29 +6,30 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>Matrix Dev: Final Edition</title>
+    <title>Matrix Dev Escape - Precision</title>
+
     <style>
       :root {
         --matrix-green: #00ff41;
         --bg: #000;
         --grid-color: rgba(0, 255, 65, 0.15);
+        --modal-bg: rgba(0, 10, 0, 0.98);
         --game-width: 450px;
-        --vision-range: 120px;
+        --phase-color: var(--matrix-green);
       }
 
-      body,
-      html {
+      html,
+      body {
         margin: 0;
         padding: 0;
         width: 100%;
         height: 100%;
-        background: #050505;
-        color: var(--theme-color, var(--matrix-green));
-        font-family: "Courier New", Courier, monospace;
+        background: #0a0a0a;
+        color: var(--matrix-green);
+        font-family: "Courier New", monospace;
         overflow: hidden;
         display: flex;
         justify-content: center;
-        overscroll-behavior-y: contain;
       }
 
       #mobile-container {
@@ -43,37 +44,41 @@
         position: relative;
       }
 
-      /* HUD Superior */
-      #status-bar {
-        background: #000;
-        border-bottom: 2px solid currentColor;
+      /* ADIÇÃO: BARRA DE INFORMAÇÕES NO TOPO */
+      #top-info {
         padding: 10px;
+        background: #000;
+        border-bottom: 2px solid var(--phase-color);
+        display: flex;
+        justify-content: space-between;
         font-size: 0.8rem;
+        font-weight: bold;
         z-index: 20;
       }
 
-      #dialogue-box {
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        margin-top: 8px;
-        padding-top: 8px;
-        color: #fff;
-        min-height: 35px;
-        font-size: 0.75rem;
-      }
-
-      /* Mundo e Scroll */
       #viewport {
         flex: 1;
         overflow: auto;
         scroll-snap-type: both mandatory;
+        -webkit-overflow-scrolling: touch;
+        border-bottom: 1px solid var(--phase-color);
         position: relative;
-        background-image: linear-gradient(
-            to right,
-            var(--grid-color) 1px,
-            transparent 1px
-          ),
-          linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
-        background-size: 100% 70vh;
+      }
+
+      #world-mask {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1000%;
+        height: 1000%;
+        pointer-events: none;
+        z-index: 10;
+        background: radial-gradient(
+          circle 120px at var(--vx) var(--vy),
+          transparent 0%,
+          rgba(0, 0, 0, 1) 100%
+        );
+        display: none;
       }
 
       #world {
@@ -92,40 +97,30 @@
         justify-content: center;
         align-items: center;
         scroll-snap-align: start;
-        scroll-snap-stop: always;
+        padding: 20px;
+        box-sizing: border-box;
+        border: 1px solid rgba(0, 255, 65, 0.05);
       }
 
-      /* Efeitos de Luz */
-      #proximity-mask {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 5;
-        background: radial-gradient(
-          circle var(--vision-range) at var(--x, 50%) var(--y, 50%),
-          transparent 0%,
-          rgba(0, 0, 0, 1) 100%
-        );
-        display: none;
+      .coord-label {
+        opacity: 0.4;
+        font-size: 1.2rem;
+        font-weight: bold;
       }
 
-      /* Rodapé */
       #footer {
-        height: 180px;
+        height: 160px;
         background: #000;
         display: flex;
-        padding: 12px;
-        gap: 12px;
-        border-top: 2px solid currentColor;
+        padding: 10px;
+        gap: 10px;
+        border-top: 2px solid var(--phase-color);
       }
 
       #mini-map {
-        width: 140px;
-        height: 140px;
-        border: 1px solid currentColor;
+        flex: 1;
+        height: 100%;
+        border: 2px solid var(--phase-color);
         position: relative;
         overflow: hidden;
         background-image: linear-gradient(
@@ -135,19 +130,15 @@
           ),
           linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
         background-size: 10% 10%;
+        box-shadow: 0 0 10px var(--phase-color);
       }
 
       #map-light {
         position: absolute;
         width: 100%;
         height: 100%;
+        z-index: 5;
         pointer-events: none;
-        z-index: 8;
-        background: radial-gradient(
-          circle 35px at var(--mx, 50%) var(--my, 50%),
-          transparent 0%,
-          rgba(0, 0, 0, 1) 90%
-        );
         display: none;
       }
 
@@ -158,114 +149,77 @@
         background: #fff;
         border-radius: 50%;
         box-shadow: 0 0 8px #fff;
+        z-index: 15;
         transform: translate(-50%, -50%);
-        z-index: 10;
-        transition: 0.05s linear;
       }
 
-      .controls {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        font-size: 0.7rem;
+      .task-node {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: var(--phase-color);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+        opacity: 1;
       }
 
       .btn {
         background: transparent;
-        border: 1px solid currentColor;
-        color: inherit;
+        border: 1px solid var(--phase-color);
+        color: var(--phase-color);
         padding: 8px;
         cursor: pointer;
-        font-family: "Courier New", monospace;
-        text-transform: uppercase;
-        font-weight: bold;
+        font-family: "Courier New";
       }
 
-      #skill-container {
-        margin-top: 10px;
-        flex: 1;
-        overflow-y: auto;
-      }
-
-      .skill-tag {
-        display: inline-block;
-        padding: 2px 5px;
-        border: 1px solid currentColor;
-        margin: 2px;
-        font-size: 0.6rem;
-        background: rgba(0, 255, 65, 0.05);
-      }
-
-      .task-node-map {
-        position: absolute;
-        width: 4px;
-        height: 4px;
-        background: currentColor;
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 7;
-      }
-
-      /* Modais */
       #modal-overlay {
         display: none;
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.95);
+        inset: 0;
+        background: rgba(0, 0, 0, 0.9);
         z-index: 100;
         justify-content: center;
         align-items: center;
       }
 
       #modal {
-        background: #000;
-        border: 2px solid currentColor;
+        background: var(--modal-bg);
+        border: 1px solid var(--phase-color);
         padding: 20px;
         width: 85%;
         text-align: center;
       }
+
       #modal input {
         background: #000;
-        border: 1px solid currentColor;
-        color: #fff;
+        border: 1px solid var(--phase-color);
+        color: var(--phase-color);
         width: 90%;
-        padding: 12px;
-        margin: 15px 0;
-        font-family: "Courier New", monospace;
-        text-align: center;
+        padding: 10px;
+        margin: 10px 0;
+        font-family: "Courier New";
       }
 
-      .timer-danger {
-        color: #ff3e3e;
-        animation: blink 0.5s infinite;
-        font-weight: bold;
-      }
-      @keyframes blink {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0;
-        }
+      .skill-tag {
+        display: inline-block;
+        padding: 2px 4px;
+        border: 1px solid var(--phase-color);
+        margin: 2px;
+        font-size: 0.6rem;
       }
     </style>
   </head>
+
   <body>
     <div id="mobile-container">
-      <div id="status-bar">
-        <div style="display: flex; justify-content: space-between">
-          <span>FASE: <span id="phase-num">1</span></span>
-          <span id="timer">00:00</span>
-        </div>
-        <div id="dialogue-box">Morpheus: Acorde, dev...</div>
+      <div id="top-info">
+        <span id="top-phase-name">PHASE: ???</span>
+        <span id="top-progress">NODES: 0/0</span>
       </div>
 
       <div id="viewport">
-        <div id="proximity-mask"></div>
+        <div id="world-mask"></div>
         <div id="world"></div>
       </div>
 
@@ -274,33 +228,27 @@
           <div id="map-light"></div>
           <div id="player-dot"></div>
         </div>
-        <div class="controls">
-          <div
-            id="gate-info"
+        <div style="flex: 1; font-size: 0.7rem; overflow-y: auto">
+          <strong
+            id="phase-label"
             style="
-              font-weight: bold;
-              border-bottom: 1px solid #333;
-              padding-bottom: 4px;
+              display: block;
+              color: var(--phase-color);
+              margin-bottom: 4px;
             "
+            >PHASE</strong
           >
-            DATA: 0/0
-          </div>
-          <div id="skill-container">
-            <div style="font-size: 0.55rem; opacity: 0.7; margin-bottom: 3px">
-              SKILLS COLETADAS:
-            </div>
-            <div id="skill-list">Nenhuma</div>
-          </div>
+          <div id="skill-list">Nenhuma</div>
         </div>
       </div>
 
       <div id="modal-overlay">
         <div id="modal">
-          <h2 id="modal-title">TERMINAL</h2>
+          <h3 id="modal-title"></h3>
           <p id="modal-question"></p>
           <div id="modal-body"></div>
           <div id="modal-footer" style="margin-top: 15px">
-            <button class="btn" onclick="closeModal()">CANCELAR</button>
+            <button class="btn" onclick="closeModal()">CLOSE</button>
           </div>
         </div>
       </div>
@@ -309,196 +257,393 @@
     <script>
       const gameFases = [
         {
-          id: 1,
-          nome: "A CAMADA 0",
-          msg: "Morpheus: O grid está visível. Encontre os nós para prosseguir.",
-          cor: "#00ff41",
-          escuro: true,
-          tempo: 120,
-          perguntas: {
-            "1,2": {
-              q: "GIT: Comando para baixar repositório?",
-              a: "git clone",
-              s: "CLONE",
+          id: 0,
+          nome: "ESTRUTURA",
+          escuro: false,
+          color: "#00ff41",
+          data: {
+            "1,1": {
+              q: "Qual tag define o corpo do HTML?",
+              a: "body",
+              skill: "HTML_BODY",
             },
-            "5,5": {
-              q: "CSS: Display que usa eixos X e Y?",
-              a: "flex",
-              s: "FLEX",
+            "2,4": {
+              q: "Qual atributo define o caminho de um script JS?",
+              a: "src",
+              skill: "HTML_SCRIPT_SRC",
+            },
+            "3,3": {
+              q: "Comando Linux para listar arquivos?",
+              a: "ls",
+              skill: "LINUX_LS",
+            },
+            "6,2": {
+              q: "Comando Linux para criar diretório?",
+              a: "mkdir",
+              skill: "LINUX_MKDIR",
+            },
+            "1,2": {
+              q: "Qual palavra cria uma constante no JavaScript?",
+              options: ["var", "let", "const"],
+              a: 2,
+              skill: "JS_CONST",
+            },
+            "5,5": { type: "EXIT" },
+          },
+        },
+
+        {
+          id: 1,
+          nome: "DOCKER & JS",
+          escuro: true,
+          color: "#00d4ff",
+          data: {
+            "1,2": {
+              q: "Qual palavra cria uma constante no JavaScript?",
+              options: ["var", "let", "const"],
+              a: 2,
+              skill: "JS_CONST",
+            },
+            "2,6": {
+              q: "Qual método converte JSON em objeto JavaScript?",
+              a: "json.parse",
+              skill: "JS_JSON_PARSE",
+            },
+            "4,4": {
+              q: "Docker: comando para listar containers em execução?",
+              a: "docker ps",
+              skill: "DOCKER_PS",
+            },
+            "6,1": {
+              q: "Qual arquivo define instruções de build no Docker?",
+              options: ["docker.json", "dockerfile", "docker-compose.yml"],
+              a: 1,
+              skill: "DOCKERFILE",
             },
             "9,9": { type: "EXIT" },
           },
         },
+
         {
           id: 2,
-          nome: "SHADOW BYTES",
-          msg: "Morpheus: Eles detectaram sua presença! O grid escureceu.",
-          cor: "#00ccff",
+          nome: "GIT CONTROL",
           escuro: true,
-          tempo: 90,
-          perguntas: {
-            "3,3": {
-              q: "JS: Tipo de dado para verdadeiro/falso?",
-              a: "boolean",
-              s: "BOOL",
+          color: "#f05032",
+          data: {
+            "1,8": {
+              q: "Comando Git para clonar um repositório?",
+              a: "git clone",
+              skill: "GIT_CLONE",
             },
-            "7,1": { q: "HTML: Tag para a maior fonte?", a: "h1", s: "H1" },
-            "0,5": { type: "EXIT" },
+            "3,2": {
+              q: "Qual comando cria um commit?",
+              options: ["git push", "git commit", "git add"],
+              a: 1,
+              skill: "GIT_COMMIT",
+            },
+            "5,5": {
+              q: "Qual comando adiciona arquivos ao stage?",
+              options: ["git add", "git status", "git log"],
+              a: 0,
+              skill: "GIT_ADD",
+            },
+            "7,3": {
+              q: "Qual comando troca de branch?",
+              options: ["git checkout", "git branch", "git merge"],
+              a: 0,
+              skill: "GIT_CHECKOUT",
+            },
+            "9,9": { type: "EXIT" },
+          },
+        },
+
+        {
+          id: 3,
+          nome: "VUE CORE",
+          escuro: false,
+          color: "#42b883",
+          data: {
+            "2,2": {
+              q: "Qual diretiva Vue renderiza listas?",
+              options: ["v-if", "v-for", "v-bind"],
+              a: 1,
+              skill: "VUE_VFOR",
+            },
+            "3,4": {
+              q: "Qual diretiva Vue faz bind de atributos?",
+              options: ["v-model", "v-bind", "v-on"],
+              a: 1,
+              skill: "VUE_VBIND",
+            },
+            "6,2": {
+              q: "Qual hook é executado ao montar o componente (Vue 3)?",
+              a: "onmounted",
+              skill: "VUE_ONMOUNTED",
+            },
+            "7,6": {
+              q: "Qual função cria estado reativo simples no Vue 3?",
+              options: ["reactive", "ref", "computed"],
+              a: 1,
+              skill: "VUE_REF",
+            },
+            "9,9": { type: "EXIT" },
+          },
+        },
+
+        {
+          id: 4,
+          nome: "REACT MATRIX",
+          escuro: true,
+          color: "#61dafb",
+          data: {
+            "1,3": {
+              q: "Qual hook gerencia estado no React?",
+              options: ["useEffect", "useState", "useContext"],
+              a: 1,
+              skill: "REACT_USESTATE",
+            },
+            "3,5": {
+              q: "Qual hook executa efeitos colaterais?",
+              options: ["useMemo", "useEffect", "useRef"],
+              a: 1,
+              skill: "REACT_USEEFFECT",
+            },
+            "5,2": {
+              q: "Qual prop é obrigatória ao renderizar listas?",
+              options: ["id", "index", "key"],
+              a: 2,
+              skill: "REACT_KEY",
+            },
+            "7,7": {
+              q: "Biblioteca padrão de roteamento no React?",
+              options: ["react-router", "redux", "next"],
+              a: 0,
+              skill: "REACT_ROUTER",
+            },
+            "9,9": { type: "EXIT" },
+          },
+        },
+
+        {
+          id: 5,
+          nome: "NODE & TYPESCRIPT",
+          escuro: true,
+          color: "#3178c6",
+          data: {
+            "2,1": {
+              q: "Comando para iniciar um projeto Node.js?",
+              a: "npm init",
+              skill: "NODE_NPM_INIT",
+            },
+            "4,3": {
+              q: "Qual objeto é global no Node.js?",
+              options: ["window", "document", "global"],
+              a: 2,
+              skill: "NODE_GLOBAL",
+            },
+            "5,6": {
+              q: "Qual extensão padrão de arquivos TypeScript?",
+              options: [".js", ".tsx", ".ts"],
+              a: 2,
+              skill: "TS_EXTENSION",
+            },
+            "7,2": {
+              q: "Qual comando compila arquivos TypeScript?",
+              options: ["ts-node", "npm build", "tsc"],
+              a: 2,
+              skill: "TS_TSC",
+            },
+            "9,9": { type: "EXIT" },
           },
         },
       ];
 
-      let faseIdx = 0;
+      let currentFaseIdx = 0;
       let inventory = [];
-      let timeLeft = 0;
-      let timer;
+      let currentCoord = "";
 
-      const viewport = document.getElementById("viewport");
       const world = document.getElementById("world");
+      const viewport = document.getElementById("viewport");
       const minimap = document.getElementById("mini-map");
-      const mainMask = document.getElementById("proximity-mask");
-      const mapLight = document.getElementById("map-light");
+      const dot = document.getElementById("player-dot");
+      const light = document.getElementById("map-light");
+      const worldMask = document.getElementById("world-mask");
+      const overlay = document.getElementById("modal-overlay");
 
-      function carregarFase(idx) {
-        const fase = gameFases[idx];
-        faseIdx = idx;
+      function loadPhase(idx) {
+        currentFaseIdx = idx;
         inventory = [];
-        timeLeft = fase.tempo;
-
-        document.documentElement.style.setProperty("--theme-color", fase.cor);
-        document.getElementById(
-          "phase-num"
-        ).innerText = `${fase.id} - ${fase.nome}`;
-        document.getElementById("dialogue-box").innerText =
-          "Morpheus: " + fase.msg;
-
-        mainMask.style.display = fase.escuro ? "block" : "none";
-        mapLight.style.display = fase.escuro ? "block" : "none";
-
-        renderWorld(fase);
-        startTimer();
-        updateUI();
-        viewport.scrollTo(0, 0);
-      }
-
-      function renderWorld(fase) {
         world.innerHTML = "";
-        minimap.querySelectorAll(".task-node-map").forEach((n) => n.remove());
+        minimap.querySelectorAll(".task-node").forEach((n) => n.remove());
+
+        const fase = gameFases[idx];
+
+        document.documentElement.style.setProperty("--phase-color", fase.color);
+        document.getElementById("phase-label").innerText =
+          "PHASE: " + fase.nome;
+        document.getElementById("top-phase-name").innerText =
+          "PHASE: " + fase.nome;
+        updateInventoryUI();
+
+        worldMask.style.display = fase.escuro ? "block" : "none";
+        light.style.display = fase.escuro ? "block" : "none";
 
         for (let r = 0; r < 10; r++) {
           for (let c = 0; c < 10; c++) {
             const coord = `${c},${r}`;
             const sec = document.createElement("section");
             sec.className = "section";
-            const node = fase.perguntas[coord];
 
-            if (node) {
-              if (node.type === "EXIT") {
-                sec.innerHTML = `<h1 style="color:gold">PORTAL</h1><button class="btn" onclick="checkExit()">AVANÇAR</button>`;
-              } else {
-                sec.innerHTML = `<h2>NODE ${coord}</h2><button class="btn" onclick="openTerminal('${coord}')">HACKEAR</button>`;
-              }
-              const mapDot = document.createElement("div");
-              mapDot.className = "task-node-map";
-              mapDot.style.left = `${c * 10 + 5}%`;
-              mapDot.style.top = `${r * 10 + 5}%`;
-              if (node.type === "EXIT") mapDot.style.background = "gold";
-              minimap.appendChild(mapDot);
+            if (fase.data[coord]) {
+              const node = document.createElement("div");
+              node.className = "task-node";
+              node.id = `node-${coord}`;
+              node.style.left = `${c * 10 + 5}%`;
+              node.style.top = `${r * 10 + 5}%`;
+              node.style.opacity = fase.escuro ? "0" : "1";
+              if (fase.data[coord].type === "EXIT")
+                node.style.background = "gold";
+              minimap.appendChild(node);
+
+              const isExit = fase.data[coord].type === "EXIT";
+              sec.innerHTML = `<h2>[ ${isExit ? "EXIT" : "NODE"} ${coord} ]</h2>
+                <button class="btn" onclick="${
+                  isExit ? "checkExit()" : `openTerminal('${coord}')`
+                }">${isExit ? "UNSEAL" : "ACCESS"}</button>`;
             } else {
-              sec.innerHTML = `<span style="opacity:0.05; font-size:4rem">${coord}</span>`;
+              sec.innerHTML = `<span class="coord-label">${coord}</span>`;
             }
             world.appendChild(sec);
           }
         }
-      }
-
-      function startTimer() {
-        clearInterval(timer);
-        timer = setInterval(() => {
-          timeLeft--;
-          const m = Math.floor(timeLeft / 60);
-          const s = timeLeft % 60;
-          const el = document.getElementById("timer");
-          el.innerText = `${m}:${s.toString().padStart(2, "0")}`;
-          el.className = timeLeft <= 10 ? "timer-danger" : "";
-          if (timeLeft <= 0) {
-            alert("TEMPO ESGOTADO!");
-            location.reload();
-          }
-        }, 1000);
+        viewport.scrollTo(0, 0);
       }
 
       function openTerminal(coord) {
-        const q = gameFases[faseIdx].perguntas[coord];
-        document.getElementById("modal-overlay").style.display = "flex";
-        document.getElementById("modal-question").innerText = q.q;
-        document.getElementById("modal-body").innerHTML = `
-            <input type="text" id="ans-input" placeholder="DIGITE..." autocomplete="off">
-            <button class="btn" style="width:100%" onclick="submitAns('${coord}')">ENVIAR</button>
-        `;
-        setTimeout(() => document.getElementById("ans-input").focus(), 100);
-      }
+        currentCoord = coord;
+        const data = gameFases[currentFaseIdx].data[coord];
+        document.getElementById("modal-title").innerText = "TERMINAL " + coord;
+        document.getElementById("modal-question").innerText = data.q;
+        const body = document.getElementById("modal-body");
+        body.innerHTML = "";
 
-      function submitAns(coord) {
-        const input = document
-          .getElementById("ans-input")
-          .value.toLowerCase()
-          .trim();
-        const node = gameFases[faseIdx].perguntas[coord];
-        if (input === node.a) {
-          if (!inventory.includes(node.s)) inventory.push(node.s);
-          closeModal();
-          updateUI();
-        } else alert("ACESSO NEGADO");
-      }
-
-      function checkExit() {
-        const req = Object.keys(gameFases[faseIdx].perguntas).length - 1;
-        if (inventory.length >= req) {
-          if (faseIdx < gameFases.length - 1) carregarFase(faseIdx + 1);
-          else alert("MISSÃO CONCLUÍDA!");
-        } else alert(`FALTAM DADOS: ${inventory.length}/${req}`);
-      }
-
-      function closeModal() {
-        document.getElementById("modal-overlay").style.display = "none";
-      }
-
-      function updateUI() {
-        const req = Object.keys(gameFases[faseIdx].perguntas).length - 1;
-        document.getElementById(
-          "gate-info"
-        ).innerText = `DATA: ${inventory.length}/${req}`;
-        const list = document.getElementById("skill-list");
-        if (inventory.length === 0) {
-          list.innerText = "Nenhuma";
+        if (data.options) {
+          data.options.forEach((opt, i) => {
+            const b = document.createElement("button");
+            b.className = "btn";
+            b.style.width = "100%";
+            b.innerText = opt;
+            b.onclick = () => validate(i);
+            body.appendChild(b);
+          });
         } else {
-          list.innerHTML = inventory
-            .map((s) => `<span class="skill-tag">${s}</span>`)
-            .join("");
+          body.innerHTML = `<input type="text" id="ans" placeholder="Answer..." autocomplete="off">
+                           <button class="btn" style="width:100%" onclick="validate()">EXECUTE</button>`;
+          setTimeout(() => document.getElementById("ans").focus(), 150);
+        }
+        overlay.style.display = "flex";
+      }
+
+      function validate(choiceIdx = null) {
+        const data = gameFases[currentFaseIdx].data[currentCoord];
+        let isCorrect = false;
+
+        if (choiceIdx !== null) isCorrect = choiceIdx === data.a;
+        else
+          isCorrect =
+            document.getElementById("ans").value.toLowerCase().trim() ===
+            data.a;
+
+        if (isCorrect) {
+          if (!inventory.includes(data.skill)) inventory.push(data.skill);
+          document.getElementById(`node-${currentCoord}`).style.background =
+            "#fff";
+          updateInventoryUI();
+          closeModal();
+        } else {
+          document.getElementById("modal-question").innerText =
+            "ACCESS DENIED - RETRY";
         }
       }
 
+      function checkExit() {
+        const faseData = gameFases[currentFaseIdx].data;
+        const required = Object.keys(faseData).filter(
+          (k) => faseData[k].skill
+        ).length;
+
+        if (inventory.length >= required) {
+          if (currentFaseIdx < gameFases.length - 1) {
+            loadPhase(currentFaseIdx + 1);
+          } else {
+            document.getElementById("modal-title").innerText = "SYSTEM CRACKED";
+            document.getElementById("modal-question").innerText =
+              "Você escapou da Matrix.";
+            overlay.style.display = "flex";
+          }
+        } else {
+          document.getElementById("modal-title").innerText = "EXIT LOCKED";
+          document.getElementById(
+            "modal-question"
+          ).innerText = `Nodes necessários: ${inventory.length}/${required}`;
+          overlay.style.display = "flex";
+        }
+      }
+
+      function updateInventoryUI() {
+        const list = document.getElementById("skill-list");
+        const topProg = document.getElementById("top-progress");
+        const faseData = gameFases[currentFaseIdx].data;
+        const required = Object.keys(faseData).filter(
+          (k) => faseData[k].skill
+        ).length;
+
+        list.innerHTML = inventory.length
+          ? inventory.map((s) => `<span class="skill-tag">${s}</span>`).join("")
+          : "Nenhuma";
+        topProg.innerText = `NODES: ${inventory.length}/${required}`;
+      }
+
+      function closeModal() {
+        overlay.style.display = "none";
+      }
+
       viewport.addEventListener("scroll", () => {
-        const px =
+        const pctX =
           viewport.scrollLeft /
           (viewport.scrollWidth - viewport.clientWidth || 1);
-        const py =
+        const pctY =
           viewport.scrollTop /
           (viewport.scrollHeight - viewport.clientHeight || 1);
+        const mapW = minimap.clientWidth;
+        const mapH = minimap.clientHeight;
+        const posX = pctX * (mapW * 0.9) + mapW * 0.05;
+        const posY = pctY * (mapH * 0.9) + mapH * 0.05;
 
-        mainMask.style.setProperty("--x", `${px * 100}%`);
-        mainMask.style.setProperty("--y", `${py * 100}%`);
+        dot.style.left = posX + "px";
+        dot.style.top = posY + "px";
 
-        const mx = px * 90 + 5;
-        const my = py * 90 + 5;
-        mapLight.style.setProperty("--mx", `${mx}%`);
-        mapLight.style.setProperty("--my", `${my}%`);
-        document.getElementById("player-dot").style.left = `${mx}%`;
-        document.getElementById("player-dot").style.top = `${my}%`;
+        if (gameFases[currentFaseIdx].escuro) {
+          light.style.background = `radial-gradient(circle 40px at ${posX}px ${posY}px, rgba(255,255,255,0.2) 0%, #000 100%)`;
+          const vx = viewport.scrollLeft + viewport.clientWidth / 2;
+          const vy = viewport.scrollTop + viewport.clientHeight / 2;
+          worldMask.style.setProperty("--vx", vx + "px");
+          worldMask.style.setProperty("--vy", vy + "px");
+
+          minimap.querySelectorAll(".task-node").forEach((node) => {
+            const nx = (parseFloat(node.style.left) * mapW) / 100;
+            const ny = (parseFloat(node.style.top) * mapH) / 100;
+            const d = Math.hypot(nx - posX, ny - posY);
+            node.style.opacity = d < 40 ? "1" : "0";
+          });
+        } else {
+          minimap
+            .querySelectorAll(".task-node")
+            .forEach((n) => (n.style.opacity = "1"));
+        }
       });
 
-      carregarFase(0);
+      loadPhase(0);
     </script>
   </body>
 </html>
