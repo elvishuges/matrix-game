@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>Matrix Dev Escape</title>
+    <title>Matrix Dev Escape - Precision</title>
     <style>
       :root {
         --matrix-green: #00ff41;
@@ -29,6 +29,8 @@
         overflow: hidden;
         display: flex;
         justify-content: center;
+        /* Previne o "pull-to-refresh" no Chrome/Android */
+        overscroll-behavior-y: contain;
       }
 
       #mobile-container {
@@ -42,18 +44,19 @@
         border-right: 1px solid #222;
       }
 
-      /* Viewport maior para mais espaço de scroll */
       #viewport {
-        flex: 1; /* Ocupa todo o espaço restante */
+        flex: 1;
         overflow: auto;
+        /* Configurações de Trava de Scroll */
         scroll-snap-type: both mandatory;
+        -webkit-overflow-scrolling: touch;
         border-bottom: 1px solid var(--matrix-green);
       }
 
       #world {
         display: grid;
         grid-template-columns: repeat(10, var(--game-width));
-        grid-template-rows: repeat(10, 70vh); /* Seções mais altas */
+        grid-template-rows: repeat(10, 70vh);
         width: calc(var(--game-width) * 10);
         height: 700vh;
       }
@@ -65,33 +68,31 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        /* A mágica está aqui: 'always' força a parada em cada bloco */
         scroll-snap-align: start;
+        scroll-snap-stop: always;
         padding: 20px;
         box-sizing: border-box;
-        border: 1px solid rgba(0, 255, 65, 0.05); /* Grade suave no mundo */
+        border: 1px solid rgba(0, 255, 65, 0.05);
       }
 
-      /* Coordenadas mais visíveis */
+      /* O restante do CSS permanece igual */
       .coord-label {
         font-size: 1.2rem;
         opacity: 0.4;
         font-weight: bold;
       }
-
-      /* Footer fixo no Bottom */
       #footer {
-        height: 160px; /* Altura fixa para o painel de controle */
+        height: 160px;
         background: #000;
         display: flex;
-        flex-direction: row; /* Lado a lado */
         padding: 10px;
         gap: 10px;
         box-sizing: border-box;
         border-top: 2px solid var(--matrix-green);
       }
-
       #mini-map {
-        flex: 1; /* Mapa ocupa metade */
+        flex: 1;
         height: 100%;
         background: #000;
         border: 1px solid var(--matrix-green);
@@ -105,7 +106,6 @@
           linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
         background-size: 10% 10%;
       }
-
       #player-dot {
         position: absolute;
         width: 6px;
@@ -115,16 +115,15 @@
         box-shadow: 0 0 8px #fff;
         z-index: 5;
         transform: translate(-50%, -50%);
+        transition: 0.1s;
       }
-
       #backpack {
-        flex: 1; /* Mochila ocupa a outra metade */
+        flex: 1;
         font-size: 0.65rem;
         display: flex;
         flex-direction: column;
         overflow-y: auto;
       }
-
       #map-light {
         position: absolute;
         width: 100%;
@@ -137,8 +136,6 @@
         z-index: 1;
         pointer-events: none;
       }
-
-      /* Modal */
       #modal-overlay {
         display: none;
         position: absolute;
@@ -151,7 +148,6 @@
         justify-content: center;
         align-items: center;
       }
-
       #modal {
         background: var(--modal-bg);
         border: 1px solid var(--matrix-green);
@@ -159,7 +155,6 @@
         width: 85%;
         text-align: center;
       }
-
       #modal input {
         background: #000;
         border: 1px solid var(--matrix-green);
@@ -170,7 +165,6 @@
         font-family: "Courier New";
         font-size: 16px;
       }
-
       .btn {
         background: transparent;
         border: 1px solid var(--matrix-green);
@@ -179,7 +173,6 @@
         cursor: pointer;
         font-family: "Courier New";
       }
-
       .task-node {
         position: absolute;
         width: 4px;
@@ -188,13 +181,25 @@
         border-radius: 50%;
         transform: translate(-50%, -50%);
       }
-
       .skill-tag {
         display: inline-block;
         padding: 2px 4px;
         border: 1px solid var(--matrix-green);
         margin: 1px;
         font-size: 0.55rem;
+      }
+      .victory-screen {
+        color: #fff;
+        text-shadow: 0 0 10px var(--matrix-green);
+        animation: glow 1s infinite alternate;
+      }
+      @keyframes glow {
+        from {
+          opacity: 0.8;
+        }
+        to {
+          opacity: 1;
+        }
       }
     </style>
   </head>
@@ -212,12 +217,17 @@
 
         <div id="backpack">
           <strong style="border-bottom: 1px solid #333; margin-bottom: 5px"
-            >SKILLS:</strong
+            >SKILLS COLLECTED:</strong
           >
           <div id="skill-list">Vazia</div>
           <div
             id="gate-status"
-            style="margin-top: auto; color: gold; font-size: 0.6rem"
+            style="
+              margin-top: auto;
+              color: gold;
+              font-size: 0.7rem;
+              font-weight: bold;
+            "
           ></div>
         </div>
       </div>
@@ -247,7 +257,6 @@
       let currentCoord = "";
 
       const gameData = {
-        // Originais
         "1,1": {
           q: "LINUX: List files command?",
           a: "ls",
@@ -263,8 +272,6 @@
           a: "select",
           skill: "SQL_SELECT",
         },
-
-        // JavaScript (JS)
         "0,3": {
           q: "JS: Keyword for a constant variable?",
           a: "const",
@@ -280,8 +287,6 @@
           a: "object",
           skill: "JS_ARRAY_TYPE",
         },
-
-        // React
         "3,8": {
           q: "REACT: Hook used for side effects?",
           a: "useeffect",
@@ -302,8 +307,6 @@
           a: "props",
           skill: "REACT_PROPS",
         },
-
-        // Node.js
         "4,9": {
           q: "NODE: File used to manage dependencies?",
           a: "package.json",
@@ -319,11 +322,9 @@
           a: "module.exports",
           skill: "NODE_EXPORT",
         },
-
         "9,9": { type: "EXIT" },
       };
 
-      // Atualize a lista de verificação
       const requiredSkills = Object.keys(gameData)
         .filter((k) => gameData[k].skill)
         .map((k) => gameData[k].skill);
@@ -334,7 +335,6 @@
           const coord = `${c},${r}`;
           const sec = document.createElement("section");
           sec.className = "section";
-
           if (gameData[coord]) {
             const node = document.createElement("div");
             node.className = "task-node";
@@ -343,7 +343,6 @@
             node.style.top = `${r * 10 + 5}%`;
             if (gameData[coord].type === "EXIT") node.style.background = "gold";
             document.getElementById("mini-map").appendChild(node);
-
             if (gameData[coord].type === "EXIT") {
               sec.innerHTML = `<h2 style="color:gold;">[ GATE ${coord} ]</h2><button class="btn" onclick="checkExit()">UNSEAL GATE</button>`;
             } else {
@@ -356,14 +355,14 @@
         }
       }
 
+      // Funções de Terminal e UI
       function openTerminal(coord) {
         currentCoord = coord;
         document.getElementById("modal-title").innerText = "NODE " + coord;
         document.getElementById("modal-question").innerText = gameData[coord].q;
         document.getElementById("modal-body").innerHTML = `
                 <input type="text" id="modal-input" placeholder="..." autocomplete="off">
-                <button class="btn" style="width:100%" onclick="submitAnswer()">EXECUTE</button>
-            `;
+                <button class="btn" style="width:100%" onclick="submitAnswer()">EXECUTE</button>`;
         overlay.style.display = "flex";
         setTimeout(() => document.getElementById("modal-input").focus(), 100);
       }
@@ -386,20 +385,31 @@
       }
 
       function checkExit() {
-        let html = "";
+        const hasAll = inventory.length === requiredSkills.length;
+        let html =
+          "<div style='display:flex; flex-wrap:wrap; justify-content:center; gap:4px;'>";
         requiredSkills.forEach((s) => {
           const has = inventory.includes(s);
-          html += `<div class="skill-tag" style="color:${
+          html += `<div class="skill-tag" style="border-color:${
             has ? "#0f0" : "#f44"
-          }">${has ? "✔" : "✘"} ${s}</div>`;
+          }; color:${has ? "#0f0" : "#f44"}">${has ? "✔" : "✘"} ${s}</div>`;
         });
-        if (inventory.length >= 3) {
-          html += `<br><button class="btn" style="margin-top:10px" onclick="location.reload()">TERMINATE SYSTEM</button>`;
+        html += "</div>";
+        if (hasAll) {
+          document.getElementById("modal-title").innerHTML =
+            "<span class='victory-screen'>SYSTEM COMPROMISED</span>";
+          document.getElementById("modal-question").innerText =
+            "Congratulations, Operator. You escaped the Matrix.";
+          document.getElementById(
+            "modal-body"
+          ).innerHTML = `<div style="font-size:2rem; margin:10px 0;">🔓</div><button class="btn" style="width:100%; background:var(--matrix-green); color:#000;" onclick="location.reload()">REBOOT SYSTEM</button>`;
+        } else {
+          document.getElementById("modal-title").innerText = "EXIT DENIED";
+          document.getElementById(
+            "modal-question"
+          ).innerText = `Incomplete credentials (${inventory.length}/${requiredSkills.length})`;
+          document.getElementById("modal-body").innerHTML = html;
         }
-        document.getElementById("modal-title").innerText = "EXIT PROTOCOL";
-        document.getElementById("modal-question").innerText =
-          "Required Skills:";
-        document.getElementById("modal-body").innerHTML = html;
         overlay.style.display = "flex";
       }
 
@@ -411,14 +421,17 @@
         skillListUI.innerHTML = inventory.length
           ? inventory.map((s) => `<div class="skill-tag">${s}</div>`).join("")
           : "Vazia";
-        gateStatusUI.innerText = `KEYS: ${inventory.length}/3`;
+        gateStatusUI.innerText = `KEYS: ${inventory.length}/${requiredSkills.length}`;
       }
 
+      // Atualização do Mapa e Mini-Dot
       viewport.addEventListener("scroll", () => {
         const pctX =
-          viewport.scrollLeft / (viewport.scrollWidth - viewport.clientWidth);
+          viewport.scrollLeft /
+          (viewport.scrollWidth - viewport.clientWidth || 1);
         const pctY =
-          viewport.scrollTop / (viewport.scrollHeight - viewport.clientHeight);
+          viewport.scrollTop /
+          (viewport.scrollHeight - viewport.clientHeight || 1);
         const mapW = document.getElementById("mini-map").clientWidth;
         const mapH = document.getElementById("mini-map").clientHeight;
         const posX = pctX * (mapW * 0.9) + mapW * 0.05;
