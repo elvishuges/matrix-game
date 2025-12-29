@@ -1,292 +1,372 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>Matrix Dev Escape</title>
     <style>
-        :root {
-            --matrix-green: #00ff41;
-            --bg: #000;
-            --grid-color: rgba(0, 255, 65, 0.1);
-            --modal-bg: rgba(0, 15, 0, 0.98);
-            --danger: #ff3e3e;
-        }
+      :root {
+        --matrix-green: #00ff41;
+        --bg: #000;
+        --grid-color: rgba(0, 255, 65, 0.15);
+        --modal-bg: rgba(0, 10, 0, 0.98);
+        --danger: #ff3e3e;
+        --game-width: 450px;
+      }
 
-        body, html {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            background: var(--bg);
-            color: var(--matrix-green);
-            font-family: 'Courier New', monospace;
-            overflow: hidden;
-        }
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background: #0a0a0a;
+        color: var(--matrix-green);
+        font-family: "Courier New", monospace;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+      }
 
-        #viewport {
-            width: 100vw; height: 45vh;
-            overflow: auto;
-            scroll-snap-type: both mandatory;
-            border-bottom: 2px solid var(--matrix-green);
-        }
+      #mobile-container {
+        width: 100%;
+        max-width: var(--game-width);
+        height: 100vh;
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        border-left: 1px solid #222;
+        border-right: 1px solid #222;
+      }
 
-        #world {
-            display: grid;
-            grid-template-columns: repeat(10, 100vw);
-            grid-template-rows: repeat(10, 45vh);
-            width: 1000vw; height: 450vh;
-        }
+      /* Viewport maior para mais espaço de scroll */
+      #viewport {
+        flex: 1; /* Ocupa todo o espaço restante */
+        overflow: auto;
+        scroll-snap-type: both mandatory;
+        border-bottom: 1px solid var(--matrix-green);
+      }
 
-        .section {
-            width: 100vw; height: 45vh;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            scroll-snap-align: start;
-            padding: 20px; box-sizing: border-box;
-            text-align: center;
-        }
+      #world {
+        display: grid;
+        grid-template-columns: repeat(10, var(--game-width));
+        grid-template-rows: repeat(10, 70vh); /* Seções mais altas */
+        width: calc(var(--game-width) * 10);
+        height: 700vh;
+      }
 
-        #footer {
-            height: 55vh;
-            display: flex; flex-direction: column;
-            align-items: center; padding-top: 10px;
-        }
+      .section {
+        width: var(--game-width);
+        height: 70vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        scroll-snap-align: start;
+        padding: 20px;
+        box-sizing: border-box;
+        border: 1px solid rgba(0, 255, 65, 0.05); /* Grade suave no mundo */
+      }
 
-        #mini-map {
-            width: 90vw; height: 25vh;
-            background: #000;
-            border: 1px solid var(--matrix-green);
-            position: relative; overflow: hidden;
-            background-image: 
-                linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
-                linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
-            background-size: 10% 10%;
-        }
+      /* Coordenadas mais visíveis */
+      .coord-label {
+        font-size: 1.2rem;
+        opacity: 0.4;
+        font-weight: bold;
+      }
 
-        #map-light {
-            position: absolute; width: 100%; height: 100%;
-            background: radial-gradient(circle 60px at 0% 0%, rgba(0,255,65,0.2) 0%, #000 100%);
-            z-index: 1; pointer-events: none;
-        }
+      /* Footer fixo no Bottom */
+      #footer {
+        height: 160px; /* Altura fixa para o painel de controle */
+        background: #000;
+        display: flex;
+        flex-direction: row; /* Lado a lado */
+        padding: 10px;
+        gap: 10px;
+        box-sizing: border-box;
+        border-top: 2px solid var(--matrix-green);
+      }
 
-        #player-dot {
-            position: absolute; width: 10px; height: 10px;
-            background: #fff; border-radius: 50%;
-            box-shadow: 0 0 15px #fff;
-            z-index: 5; transform: translate(-50%, -50%);
-            transition: all 0.2s ease-out;
-        }
+      #mini-map {
+        flex: 1; /* Mapa ocupa metade */
+        height: 100%;
+        background: #000;
+        border: 1px solid var(--matrix-green);
+        position: relative;
+        overflow: hidden;
+        background-image: linear-gradient(
+            to right,
+            var(--grid-color) 1px,
+            transparent 1px
+          ),
+          linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+        background-size: 10% 10%;
+      }
 
-        /* Pulsing Dots for Tasks */
-        .task-node {
-            position: absolute; width: 6px; height: 6px;
-            background: var(--matrix-green); border-radius: 50%;
-            transform: translate(-50%, -50%);
-            animation: pulse 1.5s infinite;
-        }
+      #player-dot {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        background: #fff;
+        border-radius: 50%;
+        box-shadow: 0 0 8px #fff;
+        z-index: 5;
+        transform: translate(-50%, -50%);
+      }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(0, 255, 65, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(0, 255, 65, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 255, 65, 0); }
-        }
+      #backpack {
+        flex: 1; /* Mochila ocupa a outra metade */
+        font-size: 0.65rem;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+      }
 
-        /* Modal */
-        #modal-overlay {
-            display: none;
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 100; justify-content: center; align-items: center;
-        }
+      #map-light {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+          circle 40px at 0% 0%,
+          rgba(0, 255, 65, 0.2) 0%,
+          #000 100%
+        );
+        z-index: 1;
+        pointer-events: none;
+      }
 
-        #modal {
-            background: var(--modal-bg);
-            border: 2px solid var(--matrix-green);
-            padding: 25px; width: 85%; max-width: 400px;
-            text-align: center;
-        }
+      /* Modal */
+      #modal-overlay {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 100;
+        justify-content: center;
+        align-items: center;
+      }
 
-        #modal input {
-            background: #000; border: 1px solid var(--matrix-green);
-            color: var(--matrix-green); width: 100%; padding: 12px;
-            margin: 15px 0; font-family: 'Courier New';
-        }
+      #modal {
+        background: var(--modal-bg);
+        border: 1px solid var(--matrix-green);
+        padding: 20px;
+        width: 85%;
+        text-align: center;
+      }
 
-        .btn {
-            background: transparent; border: 1px solid var(--matrix-green);
-            color: var(--matrix-green); padding: 10px 20px;
-            margin: 5px; cursor: pointer; font-family: 'Courier New';
-        }
+      #modal input {
+        background: #000;
+        border: 1px solid var(--matrix-green);
+        color: var(--matrix-green);
+        width: 90%;
+        padding: 10px;
+        margin: 10px 0;
+        font-family: "Courier New";
+        font-size: 16px;
+      }
 
-        /* Inventory List */
-        #backpack {
-            margin-top: 15px; width: 90vw;
-            border-top: 1px solid #333; padding-top: 10px;
-            font-size: 0.7rem; text-align: left;
-        }
+      .btn {
+        background: transparent;
+        border: 1px solid var(--matrix-green);
+        color: var(--matrix-green);
+        padding: 8px;
+        cursor: pointer;
+        font-family: "Courier New";
+      }
 
-        .skill-tag {
-            display: inline-block; padding: 2px 6px;
-            border: 1px solid var(--matrix-green);
-            margin: 2px; border-radius: 3px;
-        }
+      .task-node {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: var(--matrix-green);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+      }
 
-        .missing { border-color: var(--danger); color: var(--danger); }
+      .skill-tag {
+        display: inline-block;
+        padding: 2px 4px;
+        border: 1px solid var(--matrix-green);
+        margin: 1px;
+        font-size: 0.55rem;
+      }
     </style>
-</head>
-<body>
-
-    <div id="viewport">
+  </head>
+  <body>
+    <div id="mobile-container">
+      <div id="viewport">
         <div id="world"></div>
-    </div>
+      </div>
 
-    <div id="footer">
+      <div id="footer">
         <div id="mini-map">
-            <div id="map-light"></div>
-            <div id="player-dot"></div>
+          <div id="map-light"></div>
+          <div id="player-dot"></div>
         </div>
-        
-        <div id="backpack">
-            <strong>MOCHILA DE SKILLS:</strong>
-            <div id="skill-list">Vazia</div>
-            <div id="gate-status" style="margin-top:8px; font-weight:bold;"></div>
-        </div>
-    </div>
 
-    <div id="modal-overlay">
-        <div id="modal">
-            <h2 id="modal-title" style="font-size:1rem;">ACCESSING TERMINAL</h2>
-            <p id="modal-question">...</p>
-            <div id="modal-body"></div>
-            <div id="modal-footer" style="margin-top:20px;">
-                <button class="btn" onclick="closeModal()">CANCEL</button>
-            </div>
+        <div id="backpack">
+          <strong style="border-bottom: 1px solid #333; margin-bottom: 5px"
+            >SKILLS:</strong
+          >
+          <div id="skill-list">Vazia</div>
+          <div
+            id="gate-status"
+            style="margin-top: auto; color: gold; font-size: 0.6rem"
+          ></div>
         </div>
+      </div>
+
+      <div id="modal-overlay">
+        <div id="modal">
+          <h2 id="modal-title" style="font-size: 0.9rem">NODE ACCESS</h2>
+          <p id="modal-question" style="font-size: 0.8rem">...</p>
+          <div id="modal-body"></div>
+          <div id="modal-footer" style="margin-top: 10px">
+            <button class="btn" onclick="closeModal()">CANCEL</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
-        const world = document.getElementById('world');
-        const viewport = document.getElementById('viewport');
-        const dot = document.getElementById('player-dot');
-        const light = document.getElementById('map-light');
-        const skillListUI = document.getElementById('skill-list');
-        const gateStatusUI = document.getElementById('gate-status');
-        const overlay = document.getElementById('modal-overlay');
+      const world = document.getElementById("world");
+      const viewport = document.getElementById("viewport");
+      const dot = document.getElementById("player-dot");
+      const light = document.getElementById("map-light");
+      const skillListUI = document.getElementById("skill-list");
+      const gateStatusUI = document.getElementById("gate-status");
+      const overlay = document.getElementById("modal-overlay");
 
-        let inventory = [];
-        let solvedSectors = new Set();
-        let currentCoord = "";
+      let inventory = [];
+      let currentCoord = "";
 
-        const requiredSkills = ["LINUX_SHELL", "DOCKER_PS", "SQL_SELECT"];
+      const requiredSkills = ["LINUX_SHELL", "DOCKER_PS", "SQL_SELECT"];
+      const gameData = {
+        "1,1": {
+          q: "LINUX: List files command?",
+          a: "ls",
+          skill: "LINUX_SHELL",
+        },
+        "4,2": {
+          q: "DOCKER: Active containers command?",
+          a: "docker ps",
+          skill: "DOCKER_PS",
+        },
+        "7,6": {
+          q: "SQL: Extract data command?",
+          a: "select",
+          skill: "SQL_SELECT",
+        },
+        "9,9": { type: "EXIT" },
+      };
 
-        const gameData = {
-            "1,1": { q: "LINUX: Command to list files?", a: "ls", skill: "LINUX_SHELL" },
-            "4,2": { q: "DOCKER: Command to see active containers?", a: "docker ps", skill: "DOCKER_PS" },
-            "7,6": { q: "SQL: Command to extract data?", a: "select", skill: "SQL_SELECT" },
-            "9,9": { type: "EXIT" }
-        };
+      // Build World
+      for (let r = 0; r < 10; r++) {
+        for (let c = 0; c < 10; c++) {
+          const coord = `${c},${r}`;
+          const sec = document.createElement("section");
+          sec.className = "section";
 
-        // Initialize World and Map
-        for (let i = 0; i < 100; i++) {
-            const r = Math.floor(i / 10);
-            const c = i % 10;
-            const coord = `${c},${r}`;
-            const sec = document.createElement('section');
-            sec.className = 'section';
-            
-            if (gameData[coord]) {
-                const node = document.createElement('div');
-                node.className = 'task-node';
-                node.id = `node-${coord}`;
-                node.style.left = `${(c * 10) + 5}%`;
-                node.style.top = `${(r * 10) + 5}%`;
-                document.getElementById('mini-map').appendChild(node);
+          if (gameData[coord]) {
+            const node = document.createElement("div");
+            node.className = "task-node";
+            node.id = `node-${coord}`;
+            node.style.left = `${c * 10 + 5}%`;
+            node.style.top = `${r * 10 + 5}%`;
+            if (gameData[coord].type === "EXIT") node.style.background = "gold";
+            document.getElementById("mini-map").appendChild(node);
 
-                if(gameData[coord].type === "EXIT") {
-                    sec.innerHTML = `<h2>[ EXIT GATE ]</h2><button class="btn" onclick="checkExit()">ACCESS GATE</button>`;
-                    node.style.background = "gold";
-                } else {
-                    sec.innerHTML = `<h2>[ DATA NODE ${coord} ]</h2><button class="btn" onclick="openTerminal('${coord}')">CONNECT</button>`;
-                }
+            if (gameData[coord].type === "EXIT") {
+              sec.innerHTML = `<h2 style="color:gold;">[ GATE ${coord} ]</h2><button class="btn" onclick="checkExit()">UNSEAL GATE</button>`;
             } else {
-                sec.innerHTML = `<p style="opacity:0.1">BLOCK ${coord}</p>`;
+              sec.innerHTML = `<h2>[ NODE ${coord} ]</h2><button class="btn" onclick="openTerminal('${coord}')">DECRYPT</button>`;
             }
-            world.appendChild(sec);
+          } else {
+            sec.innerHTML = `<span class="coord-label">${coord}</span>`;
+          }
+          world.appendChild(sec);
         }
+      }
 
-        function openTerminal(coord) {
-            currentCoord = coord;
-            const data = gameData[coord];
-            document.getElementById('modal-title').innerText = "ENCRYPTED NODE";
-            document.getElementById('modal-question').innerText = data.q;
-            document.getElementById('modal-body').innerHTML = `
-                <input type="text" id="modal-input" placeholder="Type answer...">
-                <button class="btn" onclick="submitAnswer()">SUBMIT</button>
+      function openTerminal(coord) {
+        currentCoord = coord;
+        document.getElementById("modal-title").innerText = "NODE " + coord;
+        document.getElementById("modal-question").innerText = gameData[coord].q;
+        document.getElementById("modal-body").innerHTML = `
+                <input type="text" id="modal-input" placeholder="..." autocomplete="off">
+                <button class="btn" style="width:100%" onclick="submitAnswer()">EXECUTE</button>
             `;
-            overlay.style.display = 'flex';
+        overlay.style.display = "flex";
+        setTimeout(() => document.getElementById("modal-input").focus(), 100);
+      }
+
+      function submitAnswer() {
+        const val = document
+          .getElementById("modal-input")
+          .value.toLowerCase()
+          .trim();
+        const data = gameData[currentCoord];
+        if (val === data.a) {
+          if (!inventory.includes(data.skill)) inventory.push(data.skill);
+          document.getElementById(`node-${currentCoord}`).style.background =
+            "white";
+          updateUI();
+          closeModal();
+        } else {
+          alert("ACCESS DENIED");
         }
+      }
 
-        function submitAnswer() {
-            const input = document.getElementById('modal-input').value.toLowerCase().trim();
-            const data = gameData[currentCoord];
-            if (input === data.a) {
-                if (!inventory.includes(data.skill)) {
-                    inventory.push(data.skill);
-                    solvedSectors.add(currentCoord);
-                    document.getElementById(`node-${currentCoord}`).style.animation = "none";
-                    document.getElementById(`node-${currentCoord}`).style.background = "white";
-                }
-                updateUI();
-                closeModal();
-                alert("SKILL ACQUIRED: " + data.skill);
-            } else {
-                alert("ACCESS DENIED");
-            }
-        }
-
-        function checkExit() {
-            let html = "<h3>GATE SECURITY SCAN</h3>";
-            let missingCount = 0;
-
-            requiredSkills.forEach(skill => {
-                const has = inventory.includes(skill);
-                if (!has) missingCount++;
-                html += `<div class="skill-tag ${has ? '' : 'missing'}">${has ? '✔' : '✘'} ${skill}</div>`;
-            });
-
-            if (missingCount === 0) {
-                html += `<p style="color:gold; margin-top:15px;">ALL CRITERIA MET. OPENING...</p>
-                         <button class="btn" onclick="location.reload()">ESCAPE SYSTEM</button>`;
-            } else {
-                html += `<p style="color:var(--danger); margin-top:15px;">ACCESS DENIED: ${missingCount} SKILLS MISSING.</p>`;
-            }
-
-            document.getElementById('modal-title').innerText = "GATE CHECKPOINT";
-            document.getElementById('modal-question').innerText = "Inventory required to exit:";
-            document.getElementById('modal-body').innerHTML = html;
-            overlay.style.display = 'flex';
-        }
-
-        function closeModal() { overlay.style.display = 'none'; }
-
-        function updateUI() {
-            skillListUI.innerHTML = inventory.length ? 
-                inventory.map(s => `<span class="skill-tag">${s}</span>`).join('') : "Vazia";
-            
-            const count = requiredSkills.filter(s => inventory.includes(s)).length;
-            gateStatusUI.innerText = `GATE ACCESS: ${count}/3 SKILLS`;
-        }
-
-        viewport.addEventListener('scroll', () => {
-            const pctX = viewport.scrollLeft / (viewport.scrollWidth - viewport.clientWidth);
-            const pctY = viewport.scrollTop / (viewport.scrollHeight - viewport.clientHeight);
-            const mapW = document.getElementById('mini-map').clientWidth;
-            const mapH = document.getElementById('mini-map').clientHeight;
-            const posX = (pctX * (mapW * 0.9)) + (mapW * 0.05);
-            const posY = (pctY * (mapH * 0.9)) + (mapH * 0.05);
-            dot.style.left = `${posX}px`;
-            dot.style.top = `${posY}px`;
-            light.style.background = `radial-gradient(circle 80px at ${posX}px ${posY}px, rgba(0, 255, 65, 0.25) 0%, #000 100%)`;
+      function checkExit() {
+        let html = "";
+        requiredSkills.forEach((s) => {
+          const has = inventory.includes(s);
+          html += `<div class="skill-tag" style="color:${
+            has ? "#0f0" : "#f44"
+          }">${has ? "✔" : "✘"} ${s}</div>`;
         });
+        if (inventory.length >= 3) {
+          html += `<br><button class="btn" style="margin-top:10px" onclick="location.reload()">TERMINATE SYSTEM</button>`;
+        }
+        document.getElementById("modal-title").innerText = "EXIT PROTOCOL";
+        document.getElementById("modal-question").innerText =
+          "Required Skills:";
+        document.getElementById("modal-body").innerHTML = html;
+        overlay.style.display = "flex";
+      }
+
+      function closeModal() {
+        overlay.style.display = "none";
+      }
+
+      function updateUI() {
+        skillListUI.innerHTML = inventory.length
+          ? inventory.map((s) => `<div class="skill-tag">${s}</div>`).join("")
+          : "Vazia";
+        gateStatusUI.innerText = `KEYS: ${inventory.length}/3`;
+      }
+
+      viewport.addEventListener("scroll", () => {
+        const pctX =
+          viewport.scrollLeft / (viewport.scrollWidth - viewport.clientWidth);
+        const pctY =
+          viewport.scrollTop / (viewport.scrollHeight - viewport.clientHeight);
+        const mapW = document.getElementById("mini-map").clientWidth;
+        const mapH = document.getElementById("mini-map").clientHeight;
+        const posX = pctX * (mapW * 0.9) + mapW * 0.05;
+        const posY = pctY * (mapH * 0.9) + mapH * 0.05;
+        dot.style.left = `${posX}px`;
+        dot.style.top = `${posY}px`;
+        light.style.background = `radial-gradient(circle 40px at ${posX}px ${posY}px, rgba(0, 255, 65, 0.4) 0%, #000 100%)`;
+      });
+
+      updateUI();
     </script>
-</body>
+  </body>
 </html>
