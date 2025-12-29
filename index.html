@@ -246,8 +246,8 @@
       let inventory = [];
       let currentCoord = "";
 
-      const requiredSkills = ["LINUX_SHELL", "DOCKER_PS", "SQL_SELECT"];
       const gameData = {
+        // Originais
         "1,1": {
           q: "LINUX: List files command?",
           a: "ls",
@@ -263,8 +263,70 @@
           a: "select",
           skill: "SQL_SELECT",
         },
+
+        // JavaScript (JS)
+        "0,3": {
+          q: "JS: Keyword for a constant variable?",
+          a: "const",
+          skill: "JS_CONST",
+        },
+        "2,5": {
+          q: "JS: Method to add item at end of array?",
+          a: "push",
+          skill: "JS_PUSH",
+        },
+        "5,0": {
+          q: "JS: Which data type is [1, 2, 3]?",
+          a: "object",
+          skill: "JS_ARRAY_TYPE",
+        },
+
+        // React
+        "3,8": {
+          q: "REACT: Hook used for side effects?",
+          a: "useeffect",
+          skill: "REACT_EFFECT",
+        },
+        "6,1": {
+          q: "REACT: Hook to manage state?",
+          a: "usestate",
+          skill: "REACT_STATE",
+        },
+        "8,4": {
+          q: "REACT: Extension for components using HTML-like syntax?",
+          a: "jsx",
+          skill: "REACT_JSX",
+        },
+        "1,7": {
+          q: "REACT: Property to pass data to children?",
+          a: "props",
+          skill: "REACT_PROPS",
+        },
+
+        // Node.js
+        "4,9": {
+          q: "NODE: File used to manage dependencies?",
+          a: "package.json",
+          skill: "NODE_PACKAGE",
+        },
+        "9,2": {
+          q: "NODE: Default tool to install packages?",
+          a: "npm",
+          skill: "NODE_NPM",
+        },
+        "2,2": {
+          q: "NODE: Method to export modules in CommonJS?",
+          a: "module.exports",
+          skill: "NODE_EXPORT",
+        },
+
         "9,9": { type: "EXIT" },
       };
+
+      // Atualize a lista de verificação
+      const requiredSkills = Object.keys(gameData)
+        .filter((k) => gameData[k].skill)
+        .map((k) => gameData[k].skill);
 
       // Build World
       for (let r = 0; r < 10; r++) {
