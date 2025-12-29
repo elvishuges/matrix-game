@@ -6,15 +6,14 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>Matrix Dev Escape - Precision</title>
+    <title>Matrix Dev: Final Edition</title>
     <style>
       :root {
         --matrix-green: #00ff41;
         --bg: #000;
         --grid-color: rgba(0, 255, 65, 0.15);
-        --modal-bg: rgba(0, 10, 0, 0.98);
-        --danger: #ff3e3e;
         --game-width: 450px;
+        --vision-range: 120px;
       }
 
       body,
@@ -23,13 +22,12 @@
         padding: 0;
         width: 100%;
         height: 100%;
-        background: #0a0a0a;
-        color: var(--matrix-green);
-        font-family: "Courier New", monospace;
+        background: #050505;
+        color: var(--theme-color, var(--matrix-green));
+        font-family: "Courier New", Courier, monospace;
         overflow: hidden;
         display: flex;
         justify-content: center;
-        /* Previne o "pull-to-refresh" no Chrome/Android */
         overscroll-behavior-y: contain;
       }
 
@@ -42,15 +40,40 @@
         flex-direction: column;
         border-left: 1px solid #222;
         border-right: 1px solid #222;
+        position: relative;
       }
 
+      /* HUD Superior */
+      #status-bar {
+        background: #000;
+        border-bottom: 2px solid currentColor;
+        padding: 10px;
+        font-size: 0.8rem;
+        z-index: 20;
+      }
+
+      #dialogue-box {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: 8px;
+        padding-top: 8px;
+        color: #fff;
+        min-height: 35px;
+        font-size: 0.75rem;
+      }
+
+      /* Mundo e Scroll */
       #viewport {
         flex: 1;
         overflow: auto;
-        /* Configurações de Trava de Scroll */
         scroll-snap-type: both mandatory;
-        -webkit-overflow-scrolling: touch;
-        border-bottom: 1px solid var(--matrix-green);
+        position: relative;
+        background-image: linear-gradient(
+            to right,
+            var(--grid-color) 1px,
+            transparent 1px
+          ),
+          linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+        background-size: 100% 70vh;
       }
 
       #world {
@@ -68,34 +91,41 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        /* A mágica está aqui: 'always' força a parada em cada bloco */
         scroll-snap-align: start;
         scroll-snap-stop: always;
-        padding: 20px;
-        box-sizing: border-box;
-        border: 1px solid rgba(0, 255, 65, 0.05);
       }
 
-      /* O restante do CSS permanece igual */
-      .coord-label {
-        font-size: 1.2rem;
-        opacity: 0.4;
-        font-weight: bold;
+      /* Efeitos de Luz */
+      #proximity-mask {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 5;
+        background: radial-gradient(
+          circle var(--vision-range) at var(--x, 50%) var(--y, 50%),
+          transparent 0%,
+          rgba(0, 0, 0, 1) 100%
+        );
+        display: none;
       }
+
+      /* Rodapé */
       #footer {
-        height: 160px;
+        height: 180px;
         background: #000;
         display: flex;
-        padding: 10px;
-        gap: 10px;
-        box-sizing: border-box;
-        border-top: 2px solid var(--matrix-green);
+        padding: 12px;
+        gap: 12px;
+        border-top: 2px solid currentColor;
       }
+
       #mini-map {
-        flex: 1;
-        height: 100%;
-        background: #000;
-        border: 1px solid var(--matrix-green);
+        width: 140px;
+        height: 140px;
+        border: 1px solid currentColor;
         position: relative;
         overflow: hidden;
         background-image: linear-gradient(
@@ -106,6 +136,21 @@
           linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
         background-size: 10% 10%;
       }
+
+      #map-light {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 8;
+        background: radial-gradient(
+          circle 35px at var(--mx, 50%) var(--my, 50%),
+          transparent 0%,
+          rgba(0, 0, 0, 1) 90%
+        );
+        display: none;
+      }
+
       #player-dot {
         position: absolute;
         width: 6px;
@@ -113,29 +158,55 @@
         background: #fff;
         border-radius: 50%;
         box-shadow: 0 0 8px #fff;
-        z-index: 5;
         transform: translate(-50%, -50%);
-        transition: 0.1s;
+        z-index: 10;
+        transition: 0.05s linear;
       }
-      #backpack {
+
+      .controls {
         flex: 1;
-        font-size: 0.65rem;
         display: flex;
         flex-direction: column;
+        font-size: 0.7rem;
+      }
+
+      .btn {
+        background: transparent;
+        border: 1px solid currentColor;
+        color: inherit;
+        padding: 8px;
+        cursor: pointer;
+        font-family: "Courier New", monospace;
+        text-transform: uppercase;
+        font-weight: bold;
+      }
+
+      #skill-container {
+        margin-top: 10px;
+        flex: 1;
         overflow-y: auto;
       }
-      #map-light {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background: radial-gradient(
-          circle 40px at 0% 0%,
-          rgba(0, 255, 65, 0.2) 0%,
-          #000 100%
-        );
-        z-index: 1;
-        pointer-events: none;
+
+      .skill-tag {
+        display: inline-block;
+        padding: 2px 5px;
+        border: 1px solid currentColor;
+        margin: 2px;
+        font-size: 0.6rem;
+        background: rgba(0, 255, 65, 0.05);
       }
+
+      .task-node-map {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: currentColor;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 7;
+      }
+
+      /* Modais */
       #modal-overlay {
         display: none;
         position: absolute;
@@ -143,69 +214,58 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.9);
+        background: rgba(0, 0, 0, 0.95);
         z-index: 100;
         justify-content: center;
         align-items: center;
       }
+
       #modal {
-        background: var(--modal-bg);
-        border: 1px solid var(--matrix-green);
+        background: #000;
+        border: 2px solid currentColor;
         padding: 20px;
         width: 85%;
         text-align: center;
       }
       #modal input {
         background: #000;
-        border: 1px solid var(--matrix-green);
-        color: var(--matrix-green);
-        width: 90%;
-        padding: 10px;
-        margin: 10px 0;
-        font-family: "Courier New";
-        font-size: 16px;
-      }
-      .btn {
-        background: transparent;
-        border: 1px solid var(--matrix-green);
-        color: var(--matrix-green);
-        padding: 8px;
-        cursor: pointer;
-        font-family: "Courier New";
-      }
-      .task-node {
-        position: absolute;
-        width: 4px;
-        height: 4px;
-        background: var(--matrix-green);
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-      }
-      .skill-tag {
-        display: inline-block;
-        padding: 2px 4px;
-        border: 1px solid var(--matrix-green);
-        margin: 1px;
-        font-size: 0.55rem;
-      }
-      .victory-screen {
+        border: 1px solid currentColor;
         color: #fff;
-        text-shadow: 0 0 10px var(--matrix-green);
-        animation: glow 1s infinite alternate;
+        width: 90%;
+        padding: 12px;
+        margin: 15px 0;
+        font-family: "Courier New", monospace;
+        text-align: center;
       }
-      @keyframes glow {
-        from {
-          opacity: 0.8;
-        }
-        to {
+
+      .timer-danger {
+        color: #ff3e3e;
+        animation: blink 0.5s infinite;
+        font-weight: bold;
+      }
+      @keyframes blink {
+        0%,
+        100% {
           opacity: 1;
+        }
+        50% {
+          opacity: 0;
         }
       }
     </style>
   </head>
   <body>
     <div id="mobile-container">
+      <div id="status-bar">
+        <div style="display: flex; justify-content: space-between">
+          <span>FASE: <span id="phase-num">1</span></span>
+          <span id="timer">00:00</span>
+        </div>
+        <div id="dialogue-box">Morpheus: Acorde, dev...</div>
+      </div>
+
       <div id="viewport">
+        <div id="proximity-mask"></div>
         <div id="world"></div>
       </div>
 
@@ -214,234 +274,231 @@
           <div id="map-light"></div>
           <div id="player-dot"></div>
         </div>
-
-        <div id="backpack">
-          <strong style="border-bottom: 1px solid #333; margin-bottom: 5px"
-            >SKILLS COLLECTED:</strong
-          >
-          <div id="skill-list">Vazia</div>
+        <div class="controls">
           <div
-            id="gate-status"
+            id="gate-info"
             style="
-              margin-top: auto;
-              color: gold;
-              font-size: 0.7rem;
               font-weight: bold;
+              border-bottom: 1px solid #333;
+              padding-bottom: 4px;
             "
-          ></div>
+          >
+            DATA: 0/0
+          </div>
+          <div id="skill-container">
+            <div style="font-size: 0.55rem; opacity: 0.7; margin-bottom: 3px">
+              SKILLS COLETADAS:
+            </div>
+            <div id="skill-list">Nenhuma</div>
+          </div>
         </div>
       </div>
 
       <div id="modal-overlay">
         <div id="modal">
-          <h2 id="modal-title" style="font-size: 0.9rem">NODE ACCESS</h2>
-          <p id="modal-question" style="font-size: 0.8rem">...</p>
+          <h2 id="modal-title">TERMINAL</h2>
+          <p id="modal-question"></p>
           <div id="modal-body"></div>
-          <div id="modal-footer" style="margin-top: 10px">
-            <button class="btn" onclick="closeModal()">CANCEL</button>
+          <div id="modal-footer" style="margin-top: 15px">
+            <button class="btn" onclick="closeModal()">CANCELAR</button>
           </div>
         </div>
       </div>
     </div>
 
     <script>
-      const world = document.getElementById("world");
-      const viewport = document.getElementById("viewport");
-      const dot = document.getElementById("player-dot");
-      const light = document.getElementById("map-light");
-      const skillListUI = document.getElementById("skill-list");
-      const gateStatusUI = document.getElementById("gate-status");
-      const overlay = document.getElementById("modal-overlay");
+      const gameFases = [
+        {
+          id: 1,
+          nome: "A CAMADA 0",
+          msg: "Morpheus: O grid está visível. Encontre os nós para prosseguir.",
+          cor: "#00ff41",
+          escuro: true,
+          tempo: 120,
+          perguntas: {
+            "1,2": {
+              q: "GIT: Comando para baixar repositório?",
+              a: "git clone",
+              s: "CLONE",
+            },
+            "5,5": {
+              q: "CSS: Display que usa eixos X e Y?",
+              a: "flex",
+              s: "FLEX",
+            },
+            "9,9": { type: "EXIT" },
+          },
+        },
+        {
+          id: 2,
+          nome: "SHADOW BYTES",
+          msg: "Morpheus: Eles detectaram sua presença! O grid escureceu.",
+          cor: "#00ccff",
+          escuro: true,
+          tempo: 90,
+          perguntas: {
+            "3,3": {
+              q: "JS: Tipo de dado para verdadeiro/falso?",
+              a: "boolean",
+              s: "BOOL",
+            },
+            "7,1": { q: "HTML: Tag para a maior fonte?", a: "h1", s: "H1" },
+            "0,5": { type: "EXIT" },
+          },
+        },
+      ];
 
+      let faseIdx = 0;
       let inventory = [];
-      let currentCoord = "";
+      let timeLeft = 0;
+      let timer;
 
-      const gameData = {
-        "1,1": {
-          q: "LINUX: List files command?",
-          a: "ls",
-          skill: "LINUX_SHELL",
-        },
-        "4,2": {
-          q: "DOCKER: Active containers command?",
-          a: "docker ps",
-          skill: "DOCKER_PS",
-        },
-        "7,6": {
-          q: "SQL: Extract data command?",
-          a: "select",
-          skill: "SQL_SELECT",
-        },
-        "0,3": {
-          q: "JS: Keyword for a constant variable?",
-          a: "const",
-          skill: "JS_CONST",
-        },
-        "2,5": {
-          q: "JS: Method to add item at end of array?",
-          a: "push",
-          skill: "JS_PUSH",
-        },
-        "5,0": {
-          q: "JS: Which data type is [1, 2, 3]?",
-          a: "object",
-          skill: "JS_ARRAY_TYPE",
-        },
-        "3,8": {
-          q: "REACT: Hook used for side effects?",
-          a: "useeffect",
-          skill: "REACT_EFFECT",
-        },
-        "6,1": {
-          q: "REACT: Hook to manage state?",
-          a: "usestate",
-          skill: "REACT_STATE",
-        },
-        "8,4": {
-          q: "REACT: Extension for components using HTML-like syntax?",
-          a: "jsx",
-          skill: "REACT_JSX",
-        },
-        "1,7": {
-          q: "REACT: Property to pass data to children?",
-          a: "props",
-          skill: "REACT_PROPS",
-        },
-        "4,9": {
-          q: "NODE: File used to manage dependencies?",
-          a: "package.json",
-          skill: "NODE_PACKAGE",
-        },
-        "9,2": {
-          q: "NODE: Default tool to install packages?",
-          a: "npm",
-          skill: "NODE_NPM",
-        },
-        "2,2": {
-          q: "NODE: Method to export modules in CommonJS?",
-          a: "module.exports",
-          skill: "NODE_EXPORT",
-        },
-        "9,9": { type: "EXIT" },
-      };
+      const viewport = document.getElementById("viewport");
+      const world = document.getElementById("world");
+      const minimap = document.getElementById("mini-map");
+      const mainMask = document.getElementById("proximity-mask");
+      const mapLight = document.getElementById("map-light");
 
-      const requiredSkills = Object.keys(gameData)
-        .filter((k) => gameData[k].skill)
-        .map((k) => gameData[k].skill);
+      function carregarFase(idx) {
+        const fase = gameFases[idx];
+        faseIdx = idx;
+        inventory = [];
+        timeLeft = fase.tempo;
 
-      // Build World
-      for (let r = 0; r < 10; r++) {
-        for (let c = 0; c < 10; c++) {
-          const coord = `${c},${r}`;
-          const sec = document.createElement("section");
-          sec.className = "section";
-          if (gameData[coord]) {
-            const node = document.createElement("div");
-            node.className = "task-node";
-            node.id = `node-${coord}`;
-            node.style.left = `${c * 10 + 5}%`;
-            node.style.top = `${r * 10 + 5}%`;
-            if (gameData[coord].type === "EXIT") node.style.background = "gold";
-            document.getElementById("mini-map").appendChild(node);
-            if (gameData[coord].type === "EXIT") {
-              sec.innerHTML = `<h2 style="color:gold;">[ GATE ${coord} ]</h2><button class="btn" onclick="checkExit()">UNSEAL GATE</button>`;
+        document.documentElement.style.setProperty("--theme-color", fase.cor);
+        document.getElementById(
+          "phase-num"
+        ).innerText = `${fase.id} - ${fase.nome}`;
+        document.getElementById("dialogue-box").innerText =
+          "Morpheus: " + fase.msg;
+
+        mainMask.style.display = fase.escuro ? "block" : "none";
+        mapLight.style.display = fase.escuro ? "block" : "none";
+
+        renderWorld(fase);
+        startTimer();
+        updateUI();
+        viewport.scrollTo(0, 0);
+      }
+
+      function renderWorld(fase) {
+        world.innerHTML = "";
+        minimap.querySelectorAll(".task-node-map").forEach((n) => n.remove());
+
+        for (let r = 0; r < 10; r++) {
+          for (let c = 0; c < 10; c++) {
+            const coord = `${c},${r}`;
+            const sec = document.createElement("section");
+            sec.className = "section";
+            const node = fase.perguntas[coord];
+
+            if (node) {
+              if (node.type === "EXIT") {
+                sec.innerHTML = `<h1 style="color:gold">PORTAL</h1><button class="btn" onclick="checkExit()">AVANÇAR</button>`;
+              } else {
+                sec.innerHTML = `<h2>NODE ${coord}</h2><button class="btn" onclick="openTerminal('${coord}')">HACKEAR</button>`;
+              }
+              const mapDot = document.createElement("div");
+              mapDot.className = "task-node-map";
+              mapDot.style.left = `${c * 10 + 5}%`;
+              mapDot.style.top = `${r * 10 + 5}%`;
+              if (node.type === "EXIT") mapDot.style.background = "gold";
+              minimap.appendChild(mapDot);
             } else {
-              sec.innerHTML = `<h2>[ NODE ${coord} ]</h2><button class="btn" onclick="openTerminal('${coord}')">DECRYPT</button>`;
+              sec.innerHTML = `<span style="opacity:0.05; font-size:4rem">${coord}</span>`;
             }
-          } else {
-            sec.innerHTML = `<span class="coord-label">${coord}</span>`;
+            world.appendChild(sec);
           }
-          world.appendChild(sec);
         }
       }
 
-      // Funções de Terminal e UI
-      function openTerminal(coord) {
-        currentCoord = coord;
-        document.getElementById("modal-title").innerText = "NODE " + coord;
-        document.getElementById("modal-question").innerText = gameData[coord].q;
-        document.getElementById("modal-body").innerHTML = `
-                <input type="text" id="modal-input" placeholder="..." autocomplete="off">
-                <button class="btn" style="width:100%" onclick="submitAnswer()">EXECUTE</button>`;
-        overlay.style.display = "flex";
-        setTimeout(() => document.getElementById("modal-input").focus(), 100);
+      function startTimer() {
+        clearInterval(timer);
+        timer = setInterval(() => {
+          timeLeft--;
+          const m = Math.floor(timeLeft / 60);
+          const s = timeLeft % 60;
+          const el = document.getElementById("timer");
+          el.innerText = `${m}:${s.toString().padStart(2, "0")}`;
+          el.className = timeLeft <= 10 ? "timer-danger" : "";
+          if (timeLeft <= 0) {
+            alert("TEMPO ESGOTADO!");
+            location.reload();
+          }
+        }, 1000);
       }
 
-      function submitAnswer() {
-        const val = document
-          .getElementById("modal-input")
+      function openTerminal(coord) {
+        const q = gameFases[faseIdx].perguntas[coord];
+        document.getElementById("modal-overlay").style.display = "flex";
+        document.getElementById("modal-question").innerText = q.q;
+        document.getElementById("modal-body").innerHTML = `
+            <input type="text" id="ans-input" placeholder="DIGITE..." autocomplete="off">
+            <button class="btn" style="width:100%" onclick="submitAns('${coord}')">ENVIAR</button>
+        `;
+        setTimeout(() => document.getElementById("ans-input").focus(), 100);
+      }
+
+      function submitAns(coord) {
+        const input = document
+          .getElementById("ans-input")
           .value.toLowerCase()
           .trim();
-        const data = gameData[currentCoord];
-        if (val === data.a) {
-          if (!inventory.includes(data.skill)) inventory.push(data.skill);
-          document.getElementById(`node-${currentCoord}`).style.background =
-            "white";
-          updateUI();
+        const node = gameFases[faseIdx].perguntas[coord];
+        if (input === node.a) {
+          if (!inventory.includes(node.s)) inventory.push(node.s);
           closeModal();
-        } else {
-          alert("ACCESS DENIED");
-        }
+          updateUI();
+        } else alert("ACESSO NEGADO");
       }
 
       function checkExit() {
-        const hasAll = inventory.length === requiredSkills.length;
-        let html =
-          "<div style='display:flex; flex-wrap:wrap; justify-content:center; gap:4px;'>";
-        requiredSkills.forEach((s) => {
-          const has = inventory.includes(s);
-          html += `<div class="skill-tag" style="border-color:${
-            has ? "#0f0" : "#f44"
-          }; color:${has ? "#0f0" : "#f44"}">${has ? "✔" : "✘"} ${s}</div>`;
-        });
-        html += "</div>";
-        if (hasAll) {
-          document.getElementById("modal-title").innerHTML =
-            "<span class='victory-screen'>SYSTEM COMPROMISED</span>";
-          document.getElementById("modal-question").innerText =
-            "Congratulations, Operator. You escaped the Matrix.";
-          document.getElementById(
-            "modal-body"
-          ).innerHTML = `<div style="font-size:2rem; margin:10px 0;">🔓</div><button class="btn" style="width:100%; background:var(--matrix-green); color:#000;" onclick="location.reload()">REBOOT SYSTEM</button>`;
-        } else {
-          document.getElementById("modal-title").innerText = "EXIT DENIED";
-          document.getElementById(
-            "modal-question"
-          ).innerText = `Incomplete credentials (${inventory.length}/${requiredSkills.length})`;
-          document.getElementById("modal-body").innerHTML = html;
-        }
-        overlay.style.display = "flex";
+        const req = Object.keys(gameFases[faseIdx].perguntas).length - 1;
+        if (inventory.length >= req) {
+          if (faseIdx < gameFases.length - 1) carregarFase(faseIdx + 1);
+          else alert("MISSÃO CONCLUÍDA!");
+        } else alert(`FALTAM DADOS: ${inventory.length}/${req}`);
       }
 
       function closeModal() {
-        overlay.style.display = "none";
+        document.getElementById("modal-overlay").style.display = "none";
       }
 
       function updateUI() {
-        skillListUI.innerHTML = inventory.length
-          ? inventory.map((s) => `<div class="skill-tag">${s}</div>`).join("")
-          : "Vazia";
-        gateStatusUI.innerText = `KEYS: ${inventory.length}/${requiredSkills.length}`;
+        const req = Object.keys(gameFases[faseIdx].perguntas).length - 1;
+        document.getElementById(
+          "gate-info"
+        ).innerText = `DATA: ${inventory.length}/${req}`;
+        const list = document.getElementById("skill-list");
+        if (inventory.length === 0) {
+          list.innerText = "Nenhuma";
+        } else {
+          list.innerHTML = inventory
+            .map((s) => `<span class="skill-tag">${s}</span>`)
+            .join("");
+        }
       }
 
-      // Atualização do Mapa e Mini-Dot
       viewport.addEventListener("scroll", () => {
-        const pctX =
+        const px =
           viewport.scrollLeft /
           (viewport.scrollWidth - viewport.clientWidth || 1);
-        const pctY =
+        const py =
           viewport.scrollTop /
           (viewport.scrollHeight - viewport.clientHeight || 1);
-        const mapW = document.getElementById("mini-map").clientWidth;
-        const mapH = document.getElementById("mini-map").clientHeight;
-        const posX = pctX * (mapW * 0.9) + mapW * 0.05;
-        const posY = pctY * (mapH * 0.9) + mapH * 0.05;
-        dot.style.left = `${posX}px`;
-        dot.style.top = `${posY}px`;
-        light.style.background = `radial-gradient(circle 40px at ${posX}px ${posY}px, rgba(0, 255, 65, 0.4) 0%, #000 100%)`;
+
+        mainMask.style.setProperty("--x", `${px * 100}%`);
+        mainMask.style.setProperty("--y", `${py * 100}%`);
+
+        const mx = px * 90 + 5;
+        const my = py * 90 + 5;
+        mapLight.style.setProperty("--mx", `${mx}%`);
+        mapLight.style.setProperty("--my", `${my}%`);
+        document.getElementById("player-dot").style.left = `${mx}%`;
+        document.getElementById("player-dot").style.top = `${my}%`;
       });
 
-      updateUI();
+      carregarFase(0);
     </script>
   </body>
 </html>
