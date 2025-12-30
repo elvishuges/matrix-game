@@ -2,10 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no,viewport-fit=cover"
-    />
+    <meta name="viewport" "content="width=device-width, initial-scale=1.0,
+    maximum-scale=1.0, user-scalable=no,viewport-fit=cover" />
     <title>Matrix Dev Escape - Precision</title>
 
     <style>
@@ -45,26 +43,61 @@
         position: relative;
       }
 
-      /* ADIÇÃO: BARRA DE INFORMAÇÕES NO TOPO */
+      /* MENU LATERAL ESTILO INSTAGRAM */
+      #side-menu {
+        position: absolute;
+        top: 0;
+        right: -280px; /* Escondido */
+        width: 280px;
+        height: 100%;
+        background: var(--modal-bg);
+        border-left: 2px solid var(--phase-color);
+        z-index: 200;
+        transition: right 0.3s ease;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+
+      #side-menu.active {
+        right: 0;
+      }
+
+      .menu-overlay {
+        display: none;
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 190;
+      }
+
       #top-info {
         padding: 10px;
         background: #000;
         border-bottom: 2px solid var(--phase-color);
         display: flex;
         justify-content: space-between;
+        align-items: center;
         font-size: 0.8rem;
         font-weight: bold;
         z-index: 20;
       }
 
+      /* BOTÃO DO MENU */
+      .menu-trigger {
+        cursor: pointer;
+        font-size: 1.5rem;
+        padding: 0 5px;
+      }
+
       #viewport {
         flex: 1;
-        min-height: 0;
+        margin: 15px; /* Margem que cria o efeito de retângulo */
+        border: 1px solid var(--phase-color);
+        position: relative;
         overflow: auto;
         scroll-snap-type: both mandatory;
-        -webkit-overflow-scrolling: touch;
-        border-bottom: 1px solid var(--phase-color);
-        position: relative;
+        background: #000;
+        z-index: 10;
       }
 
       #world-mask {
@@ -117,7 +150,6 @@
         padding: 10px;
         gap: 10px;
         border-top: 2px solid var(--phase-color);
-
         padding-bottom: calc(10px + env(safe-area-inset-bottom));
         box-sizing: border-box;
       }
@@ -218,9 +250,26 @@
 
   <body>
     <div id="mobile-container">
+      <div class="menu-overlay" id="menu-overlay" onclick="toggleMenu()"></div>
+
+      <div id="side-menu">
+        <h3
+          style="
+            border-bottom: 1px solid var(--phase-color);
+            padding-bottom: 10px;
+          "
+        >
+          CONFIGS
+        </h3>
+        <p style="font-size: 0.8rem; opacity: 0.7">
+          Aqui você poderá adicionar controles extras por célula.
+        </p>
+      </div>
+
       <div id="top-info">
         <span id="top-phase-name">PHASE: ???</span>
         <span id="top-progress">NODES: 0/0</span>
+        <span class="menu-trigger" onclick="toggleMenu()">☰</span>
       </div>
 
       <div id="viewport">
@@ -260,6 +309,14 @@
     </div>
 
     <script>
+      // FUNÇÃO PARA O MENU
+      function toggleMenu() {
+        const menu = document.getElementById("side-menu");
+        const overlay = document.getElementById("menu-overlay");
+        const isActive = menu.classList.toggle("active");
+        overlay.style.display = isActive ? "block" : "none";
+      }
+
       const gameFases = [
         {
           id: 0,
@@ -287,11 +344,9 @@
               a: "mkdir",
               skill: "LINUX_MKDIR",
             },
-
             "5,5": { type: "EXIT" },
           },
         },
-
         {
           id: 1,
           nome: "DOCKER & JS",
@@ -323,7 +378,6 @@
             "9,9": { type: "EXIT" },
           },
         },
-
         {
           id: 2,
           nome: "GIT CONTROL",
@@ -356,7 +410,6 @@
             "9,9": { type: "EXIT" },
           },
         },
-
         {
           id: 3,
           nome: "VUE CORE",
@@ -389,7 +442,6 @@
             "9,9": { type: "EXIT" },
           },
         },
-
         {
           id: 4,
           nome: "REACT MATRIX",
@@ -423,7 +475,6 @@
             "9,9": { type: "EXIT" },
           },
         },
-
         {
           id: 5,
           nome: "NODE & TYPESCRIPT",
@@ -470,21 +521,113 @@
       const worldMask = document.getElementById("world-mask");
       const overlay = document.getElementById("modal-overlay");
 
+      const onboardingSteps = [
+        {
+          title: "SYSTEM BOOT",
+          logo: "⧉ MATRIX DEV ⧉",
+          text: [
+            "Inicializando subsistemas...",
+            "Conexão segura estabelecida.",
+            "Usuário sincronizado com a Matrix.",
+          ],
+        },
+        {
+          title: "OBJETIVO",
+          logo: "▲ PROTOCOL 01 ▲",
+          text: [
+            "Desbloqueie todos os NODES.",
+            "Cada NODE exige conhecimento técnico.",
+            "Colete habilidades suficientes.",
+          ],
+        },
+        {
+          title: "PROTOCOLO DE OPERAÇÃO",
+          logo: "◉ RULESET ◉",
+          text: [
+            "Explore o mapa.",
+            "Acesse terminais.",
+            "EXIT só libera com progresso completo.",
+          ],
+        },
+      ];
+
+      let onboardingIndex = 0;
+      let typingTimeout;
+
+      function startOnboarding() {
+        onboardingIndex = 0;
+        showOnboardingStep();
+      }
+
+      function showOnboardingStep() {
+        const step = onboardingSteps[onboardingIndex];
+        document.getElementById("modal-title").innerText = step.title;
+        document.getElementById("modal-body").innerHTML = `
+          <div class="boot-logo">${step.logo}</div>
+          <div id="typing-text" class="typing"></div>
+        `;
+        document.getElementById("modal-question").innerText = "";
+        overlay.style.display = "flex";
+        typeLines(step.text, document.getElementById("typing-text"), () => {
+          renderNextButton();
+        });
+      }
+
+      function typeLines(lines, container, done) {
+        let lineIndex = 0;
+        function typeLine() {
+          if (lineIndex >= lines.length) {
+            done();
+            return;
+          }
+          let charIndex = 0;
+          const line = lines[lineIndex];
+          const p = document.createElement("div");
+          container.appendChild(p);
+          function typeChar() {
+            if (charIndex < line.length) {
+              p.textContent += line[charIndex++];
+              typingTimeout = setTimeout(typeChar, 30);
+            } else {
+              lineIndex++;
+              setTimeout(typeLine, 300);
+            }
+          }
+          typeChar();
+        }
+        typeLine();
+      }
+
+      function renderNextButton() {
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        btn.style.width = "100%";
+        btn.style.marginTop = "15px";
+        btn.innerText =
+          onboardingIndex === onboardingSteps.length - 1
+            ? "INITIALIZE"
+            : "NEXT";
+        btn.onclick = () => {
+          clearTimeout(typingTimeout);
+          onboardingIndex++;
+          if (onboardingIndex < onboardingSteps.length) showOnboardingStep();
+          else closeModal();
+        };
+        document.getElementById("modal-body").appendChild(btn);
+      }
+
       function loadPhase(idx) {
         currentFaseIdx = idx;
         inventory = [];
         world.innerHTML = "";
         minimap.querySelectorAll(".task-node").forEach((n) => n.remove());
-
         const fase = gameFases[idx];
-
         document.documentElement.style.setProperty("--phase-color", fase.color);
         document.getElementById("phase-label").innerText =
           "PHASE: " + fase.nome;
         document.getElementById("top-phase-name").innerText =
           "PHASE: " + fase.nome;
         updateInventoryUI();
-
         worldMask.style.display = fase.escuro ? "block" : "none";
         light.style.display = fase.escuro ? "block" : "none";
 
@@ -493,7 +636,6 @@
             const coord = `${c},${r}`;
             const sec = document.createElement("section");
             sec.className = "section";
-
             if (fase.data[coord]) {
               const node = document.createElement("div");
               node.className = "task-node";
@@ -504,7 +646,6 @@
               if (fase.data[coord].type === "EXIT")
                 node.style.background = "gold";
               minimap.appendChild(node);
-
               const isExit = fase.data[coord].type === "EXIT";
               sec.innerHTML = `<h2>[ ${isExit ? "EXIT" : "NODE"} ${coord} ]</h2>
                 <button class="btn" onclick="${
@@ -526,7 +667,6 @@
         document.getElementById("modal-question").innerText = data.q;
         const body = document.getElementById("modal-body");
         body.innerHTML = "";
-
         if (data.options) {
           data.options.forEach((opt, i) => {
             const b = document.createElement("button");
@@ -546,14 +686,11 @@
 
       function validate(choiceIdx = null) {
         const data = gameFases[currentFaseIdx].data[currentCoord];
-        let isCorrect = false;
-
-        if (choiceIdx !== null) isCorrect = choiceIdx === data.a;
-        else
-          isCorrect =
-            document.getElementById("ans").value.toLowerCase().trim() ===
-            data.a;
-
+        let isCorrect =
+          choiceIdx !== null
+            ? choiceIdx === data.a
+            : document.getElementById("ans").value.toLowerCase().trim() ===
+              data.a;
         if (isCorrect) {
           if (!inventory.includes(data.skill)) inventory.push(data.skill);
           document.getElementById(`node-${currentCoord}`).style.background =
@@ -571,11 +708,10 @@
         const required = Object.keys(faseData).filter(
           (k) => faseData[k].skill
         ).length;
-
         if (inventory.length >= required) {
-          if (currentFaseIdx < gameFases.length - 1) {
+          if (currentFaseIdx < gameFases.length - 1)
             loadPhase(currentFaseIdx + 1);
-          } else {
+          else {
             document.getElementById("modal-title").innerText = "SYSTEM CRACKED";
             document.getElementById("modal-question").innerText =
               "Você escapou da Matrix.";
@@ -593,14 +729,12 @@
       function updateInventoryUI() {
         const list = document.getElementById("skill-list");
         const topProg = document.getElementById("top-progress");
-        const faseData = gameFases[currentFaseIdx].data;
-        const required = Object.keys(faseData).filter(
-          (k) => faseData[k].skill
+        const required = Object.keys(gameFases[currentFaseIdx].data).filter(
+          (k) => gameFases[currentFaseIdx].data[k].skill
         ).length;
-
         list.innerHTML = inventory.length
           ? inventory.map((s) => `<span class="skill-tag">${s}</span>`).join("")
-          : "Nenhuma";
+          : "Nenhuma Skill ";
         topProg.innerText = `NODES: ${inventory.length}/${required}`;
       }
 
@@ -619,7 +753,6 @@
         const mapH = minimap.clientHeight;
         const posX = pctX * (mapW * 0.9) + mapW * 0.05;
         const posY = pctY * (mapH * 0.9) + mapH * 0.05;
-
         dot.style.left = posX + "px";
         dot.style.top = posY + "px";
 
@@ -629,7 +762,6 @@
           const vy = viewport.scrollTop + viewport.clientHeight / 2;
           worldMask.style.setProperty("--vx", vx + "px");
           worldMask.style.setProperty("--vy", vy + "px");
-
           minimap.querySelectorAll(".task-node").forEach((node) => {
             const nx = (parseFloat(node.style.left) * mapW) / 100;
             const ny = (parseFloat(node.style.top) * mapH) / 100;
@@ -644,6 +776,7 @@
       });
 
       loadPhase(0);
+      startOnboarding();
     </script>
   </body>
 </html>
