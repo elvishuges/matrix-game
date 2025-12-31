@@ -117,6 +117,36 @@
         border-top: 2px solid var(--phase-color);
       }
 
+      .mini-map-container {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+      }
+
+      .column-labels {
+        display: flex;
+        justify-content: space-around;
+        font-size: 0.6rem;
+        opacity: 0.6;
+        color: var(--matrix-green);
+        margin-bottom: 2px;
+        margin-left: 15px;
+      }
+
+      .row-and-map {
+        display: flex;
+      }
+
+      .row-labels {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        font-size: 0.6rem;
+        opacity: 0.6;
+        color: var(--matrix-green);
+        padding-right: 5px;
+      }
+
       #mini-map {
         flex: 1;
         height: 100%;
@@ -215,7 +245,7 @@
     <div id="mobile-container">
       <div id="top-info">
         <span id="top-phase-name">PHASE: ???</span>
-        <span id="top-progress">NODES: 0/0</span>
+        <span id="top-progress">Skills: 0/0</span>
       </div>
 
       <div id="viewport">
@@ -224,9 +254,30 @@
       </div>
 
       <div id="footer">
-        <div id="mini-map">
-          <div id="map-light"></div>
-          <div id="player-dot"></div>
+        <div class="mini-map-container">
+          <div class="column-labels">
+            <span>0</span><span>1</span><span>2</span><span>3</span
+            ><span>4</span> <span>5</span><span>6</span><span>7</span
+            ><span>8</span><span>9</span>
+          </div>
+          <div class="row-and-map">
+            <div class="row-labels">
+              <div>0</div>
+              <div>1</div>
+              <div>2</div>
+              <div>3</div>
+              <div>4</div>
+              <div>5</div>
+              <div>6</div>
+              <div>7</div>
+              <div>8</div>
+              <div>9</div>
+            </div>
+            <div id="mini-map">
+              <div id="map-light"></div>
+              <div id="player-dot"></div>
+            </div>
+          </div>
         </div>
         <div style="flex: 1; font-size: 0.7rem; overflow-y: auto">
           <strong
@@ -238,7 +289,7 @@
             "
             >PHASE</strong
           >
-          <div id="skill-list">Nenhuma</div>
+          <div id="skill-list">Nenhuma Skill</div>
         </div>
       </div>
 
@@ -258,7 +309,7 @@
       const gameFases = [
         {
           id: 0,
-          nome: "ESTRUTURA",
+          nome: "Genesis",
           escuro: true,
           color: "#00ff41",
           data: {
@@ -294,7 +345,7 @@
 
         {
           id: 1,
-          nome: "DOCKER & JS",
+          nome: "mid-level",
           escuro: true,
           color: "#00d4ff",
           data: {
@@ -506,7 +557,9 @@
               minimap.appendChild(node);
 
               const isExit = fase.data[coord].type === "EXIT";
-              sec.innerHTML = `<h2>[ ${isExit ? "EXIT" : "NODE"} ${coord} ]</h2>
+              sec.innerHTML = `<h2>[ ${
+                isExit ? "Exit" : "Skill"
+              } ${coord} ]</h2>
                 <button class="btn" onclick="${
                   isExit ? "checkExit()" : `openTerminal('${coord}')`
                 }">${isExit ? "UNSEAL" : "ACCESS"}</button>`;
@@ -585,7 +638,7 @@
           document.getElementById("modal-title").innerText = "EXIT LOCKED";
           document.getElementById(
             "modal-question"
-          ).innerText = `Nodes necessários: ${inventory.length}/${required}`;
+          ).innerText = `Skills necessárias: ${inventory.length}/${required}`;
           overlay.style.display = "flex";
         }
       }
@@ -600,7 +653,7 @@
 
         list.innerHTML = inventory.length
           ? inventory.map((s) => `<span class="skill-tag">${s}</span>`).join("")
-          : "Nenhuma";
+          : "Nenhuma Skill";
         topProg.innerText = `NODES: ${inventory.length}/${required}`;
       }
 
