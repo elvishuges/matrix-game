@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
   <head>
     <meta charset="UTF-8" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>Matrix Dev Escape - Precision</title>
+    <title>Matrix Dev Escape - Precisão</title>
 
     <style>
       :root {
@@ -44,7 +44,6 @@
         position: relative;
       }
 
-      /* ADIÇÃO: BARRA DE INFORMAÇÕES NO TOPO */
       #top-info {
         padding: 10px;
         background: #000;
@@ -238,14 +237,55 @@
         margin: 2px;
         font-size: 0.6rem;
       }
+
+      .skill-missing {
+        color: red;
+      }
+
+      .skill-collected {
+        color: green;
+      }
+
+      #welcome-screen {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 200;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: var(--matrix-green);
+        font-family: "Courier New", monospace;
+      }
+
+      #welcome-content {
+        text-align: center;
+        max-width: 80%;
+      }
+
+      #welcome-content h1 {
+        font-size: 2rem;
+        margin-bottom: 20px;
+      }
+
+      #welcome-content p {
+        font-size: 1.2rem;
+        margin-bottom: 30px;
+      }
+
+      #phase-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
     </style>
   </head>
 
   <body>
     <div id="mobile-container">
       <div id="top-info">
-        <span id="top-phase-name">PHASE: ???</span>
-        <span id="top-progress">Skills: 0/0</span>
+        <span id="top-phase-name">FASE: ???</span>
+        <span id="top-progress">Conhecimento: 0/0</span>
       </div>
 
       <div id="viewport">
@@ -287,9 +327,9 @@
               color: var(--phase-color);
               margin-bottom: 4px;
             "
-            >PHASE</strong
+            >FASE</strong
           >
-          <div id="skill-list">Nenhuma Skill</div>
+          <div id="skill-list">Nenhuma Habilidade</div>
         </div>
       </div>
 
@@ -299,8 +339,16 @@
           <p id="modal-question"></p>
           <div id="modal-body"></div>
           <div id="modal-footer" style="margin-top: 15px">
-            <button class="btn" onclick="closeModal()">CLOSE</button>
+            <button class="btn" onclick="closeModal()">FECHAR</button>
           </div>
+        </div>
+      </div>
+
+      <div id="welcome-screen">
+        <div id="welcome-content">
+          <h1>Matrix Dev Escape</h1>
+          <p>Escolha uma fase para começar:</p>
+          <div id="phase-buttons"></div>
         </div>
       </div>
     </div>
@@ -309,35 +357,35 @@
       const gameFases = [
         {
           id: 0,
-          nome: "Genesis",
-          escuro: true,
+          nome: "Criação de Projeto",
+          escuro: false,
           color: "#00ff41",
           data: {
             "1,1": {
-              q: "Qual tag define o corpo do HTML?",
-              a: "body",
-              skill: "HTML_BODY",
+              q: "Qual comando cria um novo projeto Node.js?",
+              a: "npm init",
+              skill: "NODE_INIT",
             },
             "2,4": {
-              q: "Qual atributo define o caminho de um script JS?",
-              a: "src",
-              skill: "HTML_SCRIPT_SRC",
+              q: "Qual tag HTML define a estrutura básica?",
+              a: "html",
+              skill: "HTML_BASIC",
             },
             "3,3": {
-              q: "Comando Linux para listar arquivos?",
-              a: "ls",
-              skill: "LINUX_LS",
+              q: "Qual atributo define o título da página?",
+              a: "title",
+              skill: "HTML_TITLE",
             },
             "6,2": {
-              q: "Comando Linux para criar diretório?",
-              a: "mkdir",
-              skill: "LINUX_MKDIR",
+              q: "Qual comando cria um arquivo vazio no Linux?",
+              a: "touch",
+              skill: "LINUX_TOUCH",
             },
             "1,2": {
-              q: "Qual palavra cria uma constante no JavaScript?",
+              q: "Qual palavra declara uma variável em JS?",
               options: ["var", "let", "const"],
-              a: 2,
-              skill: "JS_CONST",
+              a: 1,
+              skill: "JS_VAR",
             },
             "5,5": { type: "EXIT" },
           },
@@ -345,31 +393,30 @@
 
         {
           id: 1,
-          nome: "mid-level",
+          nome: "Front-end Básico",
           escuro: true,
           color: "#00d4ff",
           data: {
             "1,2": {
-              q: "Qual palavra cria uma constante no JavaScript?",
-              options: ["var", "let", "const"],
-              a: 2,
-              skill: "JS_CONST",
+              q: "Qual propriedade CSS define a cor de fundo?",
+              a: "background-color",
+              skill: "CSS_BACKGROUND",
             },
             "2,6": {
-              q: "Qual método converte JSON em objeto JavaScript?",
-              a: "json.parse",
-              skill: "JS_JSON_PARSE",
+              q: "Qual seletor CSS seleciona todos os elementos?",
+              a: "*",
+              skill: "CSS_SELECTOR",
             },
             "4,4": {
-              q: "Docker: comando para listar containers em execução?",
-              a: "docker ps",
-              skill: "DOCKER_PS",
+              q: "Qual método JS adiciona um evento a um elemento?",
+              a: "addeventlistener",
+              skill: "JS_EVENT",
             },
             "6,1": {
-              q: "Qual arquivo define instruções de build no Docker?",
-              options: ["docker.json", "dockerfile", "docker-compose.yml"],
-              a: 1,
-              skill: "DOCKERFILE",
+              q: "Qual função JS converte string para número?",
+              options: ["parseint", "tostring", "json.parse"],
+              a: 0,
+              skill: "JS_PARSEINT",
             },
             "9,9": { type: "EXIT" },
           },
@@ -377,32 +424,30 @@
 
         {
           id: 2,
-          nome: "GIT CONTROL",
+          nome: "Back-end com Node.js",
           escuro: true,
           color: "#f05032",
           data: {
             "1,8": {
-              q: "Comando Git para clonar um repositório?",
-              a: "git clone",
-              skill: "GIT_CLONE",
+              q: "Qual módulo Node.js cria um servidor HTTP?",
+              a: "http",
+              skill: "NODE_HTTP",
             },
             "3,2": {
-              q: "Qual comando cria um commit?",
-              options: ["git push", "git commit", "git add"],
-              a: 1,
-              skill: "GIT_COMMIT",
+              q: "Qual método Express define uma rota GET?",
+              a: "get",
+              skill: "EXPRESS_GET",
             },
             "5,5": {
-              q: "Qual comando adiciona arquivos ao stage?",
-              options: ["git add", "git status", "git log"],
-              a: 0,
-              skill: "GIT_ADD",
+              q: "Qual comando instala um pacote npm globalmente?",
+              a: "npm install -g",
+              skill: "NPM_GLOBAL",
             },
             "7,3": {
-              q: "Qual comando troca de branch?",
-              options: ["git checkout", "git branch", "git merge"],
+              q: "Qual objeto Node.js representa o sistema de arquivos?",
+              options: ["fs", "path", "os"],
               a: 0,
-              skill: "GIT_CHECKOUT",
+              skill: "NODE_FS",
             },
             "9,9": { type: "EXIT" },
           },
@@ -410,32 +455,30 @@
 
         {
           id: 3,
-          nome: "VUE CORE",
+          nome: "Versionamento com Git",
           escuro: false,
           color: "#42b883",
           data: {
             "2,2": {
-              q: "Qual diretiva Vue renderiza listas?",
-              options: ["v-if", "v-for", "v-bind"],
-              a: 1,
-              skill: "VUE_VFOR",
+              q: "Qual comando inicializa um repositório Git?",
+              a: "git init",
+              skill: "GIT_INIT",
             },
             "3,4": {
-              q: "Qual diretiva Vue faz bind de atributos?",
-              options: ["v-model", "v-bind", "v-on"],
-              a: 1,
-              skill: "VUE_VBIND",
+              q: "Qual comando adiciona todos os arquivos ao stage?",
+              a: "git add .",
+              skill: "GIT_ADD_ALL",
             },
             "6,2": {
-              q: "Qual hook é executado ao montar o componente (Vue 3)?",
-              a: "onmounted",
-              skill: "VUE_ONMOUNTED",
+              q: "Qual comando cria um commit com mensagem?",
+              a: "git commit -m",
+              skill: "GIT_COMMIT_M",
             },
             "7,6": {
-              q: "Qual função cria estado reativo simples no Vue 3?",
-              options: ["reactive", "ref", "computed"],
-              a: 1,
-              skill: "VUE_REF",
+              q: "Qual comando envia commits para o repositório remoto?",
+              options: ["git push", "git pull", "git fetch"],
+              a: 0,
+              skill: "GIT_PUSH",
             },
             "9,9": { type: "EXIT" },
           },
@@ -443,33 +486,30 @@
 
         {
           id: 4,
-          nome: "REACT MATRIX",
+          nome: "Containerização com Docker",
           escuro: true,
           color: "#61dafb",
           data: {
             "1,3": {
-              q: "Qual hook gerencia estado no React?",
-              options: ["useEffect", "useState", "useContext"],
-              a: 1,
-              skill: "REACT_USESTATE",
+              q: "Qual comando constrói uma imagem Docker?",
+              a: "docker build",
+              skill: "DOCKER_BUILD",
             },
             "3,5": {
-              q: "Qual hook executa efeitos colaterais?",
-              options: ["useMemo", "useEffect", "useRef"],
-              a: 1,
-              skill: "REACT_USEEFFECT",
+              q: "Qual comando executa um container Docker?",
+              a: "docker run",
+              skill: "DOCKER_RUN",
             },
             "5,2": {
-              q: "Qual prop é obrigatória ao renderizar listas?",
-              options: ["id", "index", "key"],
-              a: 2,
-              skill: "REACT_KEY",
+              q: "Qual arquivo define as instruções de build no Docker?",
+              a: "dockerfile",
+              skill: "DOCKERFILE",
             },
             "7,7": {
-              q: "Biblioteca padrão de roteamento no React?",
-              options: ["react-router", "redux", "next"],
+              q: "Qual comando lista containers em execução?",
+              options: ["docker ps", "docker images", "docker logs"],
               a: 0,
-              skill: "REACT_ROUTER",
+              skill: "DOCKER_PS",
             },
             "9,9": { type: "EXIT" },
           },
@@ -477,32 +517,31 @@
 
         {
           id: 5,
-          nome: "NODE & TYPESCRIPT",
+          nome: "Deploy na Nuvem AWS",
           escuro: true,
           color: "#3178c6",
           data: {
             "2,1": {
-              q: "Comando para iniciar um projeto Node.js?",
-              a: "npm init",
-              skill: "NODE_NPM_INIT",
+              q: "Qual serviço AWS hospeda aplicações web?",
+              a: "ec2",
+              skill: "AWS_EC2",
             },
             "4,3": {
-              q: "Qual objeto é global no Node.js?",
-              options: ["window", "document", "global"],
-              a: 2,
-              skill: "NODE_GLOBAL",
+              q: "Qual serviço AWS armazena arquivos estáticos?",
+              options: ["s3", "lambda", "rds"],
+              a: 0,
+              skill: "AWS_S3",
             },
             "5,6": {
-              q: "Qual extensão padrão de arquivos TypeScript?",
-              options: [".js", ".tsx", ".ts"],
-              a: 2,
-              skill: "TS_EXTENSION",
+              q: "Qual comando CLI da AWS lista buckets S3?",
+              a: "aws s3 ls",
+              skill: "AWS_CLI_S3",
             },
             "7,2": {
-              q: "Qual comando compila arquivos TypeScript?",
-              options: ["ts-node", "npm build", "tsc"],
-              a: 2,
-              skill: "TS_TSC",
+              q: "Qual serviço AWS executa código sem servidor?",
+              options: ["lambda", "ec2", "s3"],
+              a: 0,
+              skill: "AWS_LAMBDA",
             },
             "9,9": { type: "EXIT" },
           },
@@ -520,6 +559,25 @@
       const light = document.getElementById("map-light");
       const worldMask = document.getElementById("world-mask");
       const overlay = document.getElementById("modal-overlay");
+      const welcomeScreen = document.getElementById("welcome-screen");
+
+      function showWelcome() {
+        const phaseButtons = document.getElementById("phase-buttons");
+        phaseButtons.innerHTML = "";
+        gameFases.forEach((fase, idx) => {
+          const btn = document.createElement("button");
+          btn.className = "btn";
+          btn.innerText = `${fase.id + 1}. ${fase.nome}`;
+          btn.onclick = () => startGame(idx);
+          phaseButtons.appendChild(btn);
+        });
+        welcomeScreen.style.display = "flex";
+      }
+
+      function startGame(idx) {
+        welcomeScreen.style.display = "none";
+        loadPhase(idx);
+      }
 
       function loadPhase(idx) {
         currentFaseIdx = idx;
@@ -530,10 +588,9 @@
         const fase = gameFases[idx];
 
         document.documentElement.style.setProperty("--phase-color", fase.color);
-        document.getElementById("phase-label").innerText =
-          "PHASE: " + fase.nome;
+        document.getElementById("phase-label").innerText = "FASE: " + fase.nome;
         document.getElementById("top-phase-name").innerText =
-          "PHASE: " + fase.nome;
+          "FASE: " + fase.nome;
         updateInventoryUI();
 
         worldMask.style.display = fase.escuro ? "block" : "none";
@@ -558,11 +615,11 @@
 
               const isExit = fase.data[coord].type === "EXIT";
               sec.innerHTML = `<h2>[ ${
-                isExit ? "Exit" : "Skill"
+                isExit ? "Saída" : "Habilidade"
               } ${coord} ]</h2>
                 <button class="btn" onclick="${
                   isExit ? "checkExit()" : `openTerminal('${coord}')`
-                }">${isExit ? "UNSEAL" : "ACCESS"}</button>`;
+                }">${isExit ? "DESBLOQUEAR" : "ACESSAR"}</button>`;
             } else {
               sec.innerHTML = `<span class="coord-label">${coord}</span>`;
             }
@@ -590,8 +647,8 @@
             body.appendChild(b);
           });
         } else {
-          body.innerHTML = `<input type="text" id="ans" placeholder="Answer..." autocomplete="off">
-                           <button class="btn" style="width:100%" onclick="validate()">EXECUTE</button>`;
+          body.innerHTML = `<input type="text" id="ans" placeholder="Resposta..." autocomplete="off">
+                           <button class="btn" style="width:100%" onclick="validate()">EXECUTAR</button>`;
           setTimeout(() => document.getElementById("ans").focus(), 150);
         }
         overlay.style.display = "flex";
@@ -615,30 +672,58 @@
           closeModal();
         } else {
           document.getElementById("modal-question").innerText =
-            "ACCESS DENIED - RETRY";
+            "ACESSO NEGADO - TENTE NOVAMENTE";
         }
       }
 
       function checkExit() {
         const faseData = gameFases[currentFaseIdx].data;
-        const required = Object.keys(faseData).filter(
-          (k) => faseData[k].skill
-        ).length;
+        const requiredSkills = new Set(
+          Object.values(faseData)
+            .filter((d) => d.skill)
+            .map((d) => d.skill)
+        );
+        const collectedSkills = new Set(inventory);
+        const allCollected = [...requiredSkills].every((skill) =>
+          collectedSkills.has(skill)
+        );
 
-        if (inventory.length >= required) {
-          if (currentFaseIdx < gameFases.length - 1) {
-            loadPhase(currentFaseIdx + 1);
-          } else {
-            document.getElementById("modal-title").innerText = "SYSTEM CRACKED";
-            document.getElementById("modal-question").innerText =
-              "Você escapou da Matrix.";
-            overlay.style.display = "flex";
-          }
+        document.getElementById("modal-title").innerText = allCollected
+          ? "DESBLOQUEAR SAÍDA"
+          : "SAÍDA BLOQUEADA";
+        document.getElementById("modal-question").innerText =
+          "Habilidades necessárias:";
+
+        const body = document.getElementById("modal-body");
+        body.innerHTML = "<ul>";
+        requiredSkills.forEach((skill) => {
+          const collected = collectedSkills.has(skill);
+          body.innerHTML += `<li class="${
+            collected ? "skill-collected" : "skill-missing"
+          }">${skill}</li>`;
+        });
+        body.innerHTML += "</ul>";
+
+        const footer = document.getElementById("modal-footer");
+        footer.innerHTML = allCollected
+          ? `<button class="btn" onclick="unlockExit()">DESBLOQUEAR</button>`
+          : `<button class="btn" onclick="closeModal()">FECHAR</button>`;
+
+        overlay.style.display = "flex";
+      }
+
+      function unlockExit() {
+        closeModal();
+        if (currentFaseIdx < gameFases.length - 1) {
+          loadPhase(currentFaseIdx + 1);
         } else {
-          document.getElementById("modal-title").innerText = "EXIT LOCKED";
+          document.getElementById("modal-title").innerText = "SISTEMA INVASO";
+          document.getElementById("modal-question").innerText =
+            "Você escapou da Matrix.";
+          document.getElementById("modal-body").innerHTML = "";
           document.getElementById(
-            "modal-question"
-          ).innerText = `Skills necessárias: ${inventory.length}/${required}`;
+            "modal-footer"
+          ).innerHTML = `<button class="btn" onclick="closeModal()">FECHAR</button>`;
           overlay.style.display = "flex";
         }
       }
@@ -653,8 +738,8 @@
 
         list.innerHTML = inventory.length
           ? inventory.map((s) => `<span class="skill-tag">${s}</span>`).join("")
-          : "Nenhuma Skill";
-        topProg.innerText = `NODES: ${inventory.length}/${required}`;
+          : "Nenhuma Habilidade";
+        topProg.innerText = `NODOS: ${inventory.length}/${required}`;
       }
 
       function closeModal() {
@@ -696,7 +781,7 @@
         }
       });
 
-      loadPhase(0);
+      showWelcome();
     </script>
   </body>
 </html>
