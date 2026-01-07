@@ -2,786 +2,300 @@
 <html lang="pt-br">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weekly Kanban - Elvis Huges</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
     />
-    <title>Matrix Dev Escape - Precisão</title>
-
     <style>
-      :root {
-        --matrix-green: #00ff41;
-        --bg: #000;
-        --grid-color: rgba(0, 255, 65, 0.15);
-        --modal-bg: rgba(0, 10, 0, 0.98);
-        --game-width: 450px;
-        --phase-color: var(--matrix-green);
-      }
-
-      html,
       body {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-        background: #0a0a0a;
-        color: var(--matrix-green);
-        font-family: "Courier New", monospace;
-        overflow: hidden;
-        display: flex;
-        justify-content: center;
+        font-family: "Inter", sans-serif;
+        background-color: #0f0f0f;
+        color: #e0e0e0;
       }
-
-      #mobile-container {
-        width: 100%;
-        max-width: var(--game-width);
-        height: 100vh;
-        background: var(--bg);
-        display: flex;
-        flex-direction: column;
-        border-left: 1px solid #222;
-        border-right: 1px solid #222;
-        position: relative;
+      .kanban-column {
+        background-color: #1a1a1a;
+        min-width: 300px;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        border: 1px solid #2a2a2a;
       }
-
-      #top-info {
-        padding: 10px;
-        background: #000;
-        border-bottom: 2px solid var(--phase-color);
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.8rem;
-        font-weight: bold;
-        z-index: 20;
+      /* Destaque para o dia atual */
+      .is-today {
+        border: 1px solid #bb86fc;
+        background-color: #1e1b24;
+        box-shadow: 0 0 15px rgba(187, 134, 252, 0.1);
       }
-
-      #viewport {
-        flex: 1;
-        overflow: auto;
-        scroll-snap-type: both mandatory;
-        -webkit-overflow-scrolling: touch;
-        border-bottom: 1px solid var(--phase-color);
-        position: relative;
+      .task-card {
+        background-color: #262626;
+        border-left: 4px solid #bb86fc;
+        transition: all 0.2s ease;
       }
-
-      #world-mask {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 1000%;
-        height: 1000%;
-        pointer-events: none;
-        z-index: 10;
-        background: radial-gradient(
-          circle 120px at var(--vx) var(--vy),
-          transparent 0%,
-          rgba(0, 0, 0, 1) 100%
-        );
-        display: none;
+      .task-card:hover {
+        transform: scale(1.02);
+        background-color: #2d2d2d;
       }
-
-      #world {
-        display: grid;
-        grid-template-columns: repeat(10, var(--game-width));
-        grid-template-rows: repeat(10, 70vh);
-        width: calc(var(--game-width) * 10);
-        height: 700vh;
-      }
-
-      .section {
-        width: var(--game-width);
-        height: 70vh;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        scroll-snap-align: start;
-        padding: 20px;
-        box-sizing: border-box;
-        border: 1px solid rgba(0, 255, 65, 0.05);
-      }
-
-      .coord-label {
+      .completed {
         opacity: 0.4;
-        font-size: 1.2rem;
-        font-weight: bold;
+        text-decoration: line-through;
+        border-left-color: #03dac6;
       }
-
-      #footer {
-        height: 160px;
-        background: #000;
-        display: flex;
-        padding: 10px;
-        gap: 10px;
-        border-top: 2px solid var(--phase-color);
-      }
-
-      .mini-map-container {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-      }
-
-      .column-labels {
-        display: flex;
-        justify-content: space-around;
-        font-size: 0.6rem;
-        opacity: 0.6;
-        color: var(--matrix-green);
-        margin-bottom: 2px;
-        margin-left: 15px;
-      }
-
-      .row-and-map {
-        display: flex;
-      }
-
-      .row-labels {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-around;
-        font-size: 0.6rem;
-        opacity: 0.6;
-        color: var(--matrix-green);
-        padding-right: 5px;
-      }
-
-      #mini-map {
-        flex: 1;
-        height: 100%;
-        border: 2px solid var(--phase-color);
-        position: relative;
-        overflow: hidden;
-        background-image: linear-gradient(
-            to right,
-            var(--grid-color) 1px,
-            transparent 1px
-          ),
-          linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
-        background-size: 10% 10%;
-        box-shadow: 0 0 10px var(--phase-color);
-      }
-
-      #map-light {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        z-index: 5;
-        pointer-events: none;
-        display: none;
-      }
-
-      #player-dot {
-        position: absolute;
+      ::-webkit-scrollbar {
         width: 6px;
         height: 6px;
-        background: #fff;
-        border-radius: 50%;
-        box-shadow: 0 0 8px #fff;
-        z-index: 15;
-        transform: translate(-50%, -50%);
       }
-
-      .task-node {
-        position: absolute;
-        width: 4px;
-        height: 4px;
-        background: var(--phase-color);
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 2;
-        opacity: 1;
+      ::-webkit-scrollbar-track {
+        background: #0f0f0f;
       }
-
-      .btn {
-        background: transparent;
-        border: 1px solid var(--phase-color);
-        color: var(--phase-color);
-        padding: 8px;
-        cursor: pointer;
-        font-family: "Courier New";
-      }
-
-      #modal-overlay {
-        display: none;
-        position: absolute;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.9);
-        z-index: 100;
-        justify-content: center;
-        align-items: center;
-      }
-
-      #modal {
-        background: var(--modal-bg);
-        border: 1px solid var(--phase-color);
-        padding: 20px;
-        width: 85%;
-        text-align: center;
-      }
-
-      #modal input {
-        background: #000;
-        border: 1px solid var(--phase-color);
-        color: var(--phase-color);
-        width: 90%;
-        padding: 10px;
-        margin: 10px 0;
-        font-family: "Courier New";
-      }
-
-      .skill-tag {
-        display: inline-block;
-        padding: 2px 4px;
-        border: 1px solid var(--phase-color);
-        margin: 2px;
-        font-size: 0.6rem;
-      }
-
-      .skill-missing {
-        color: red;
-      }
-
-      .skill-collected {
-        color: green;
-      }
-
-      #welcome-screen {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.95);
-        z-index: 200;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: var(--matrix-green);
-        font-family: "Courier New", monospace;
-      }
-
-      #welcome-content {
-        text-align: center;
-        max-width: 80%;
-      }
-
-      #welcome-content h1 {
-        font-size: 2rem;
-        margin-bottom: 20px;
-      }
-
-      #welcome-content p {
-        font-size: 1.2rem;
-        margin-bottom: 30px;
-      }
-
-      #phase-buttons {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
+      ::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 10px;
       }
     </style>
   </head>
-
   <body>
-    <div id="mobile-container">
-      <div id="top-info">
-        <span id="top-phase-name">FASE: ???</span>
-        <span id="top-progress">Conhecimento: 0/0</span>
-      </div>
-
-      <div id="viewport">
-        <div id="world-mask"></div>
-        <div id="world"></div>
-      </div>
-
-      <div id="footer">
-        <div class="mini-map-container">
-          <div class="column-labels">
-            <span>0</span><span>1</span><span>2</span><span>3</span
-            ><span>4</span> <span>5</span><span>6</span><span>7</span
-            ><span>8</span><span>9</span>
-          </div>
-          <div class="row-and-map">
-            <div class="row-labels">
-              <div>0</div>
-              <div>1</div>
-              <div>2</div>
-              <div>3</div>
-              <div>4</div>
-              <div>5</div>
-              <div>6</div>
-              <div>7</div>
-              <div>8</div>
-              <div>9</div>
-            </div>
-            <div id="mini-map">
-              <div id="map-light"></div>
-              <div id="player-dot"></div>
-            </div>
-          </div>
+    <div id="app" class="h-screen flex flex-col p-4 md:p-8">
+      <header
+        class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-800 pb-6"
+      >
+        <div>
+          <h1 class="text-3xl font-bold text-white tracking-tight">
+            Weekly <span style="color: #bb86fc">Kanban</span>
+          </h1>
+          <p class="text-gray-400 text-sm flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+            Hoje é
+            <span class="text-white font-semibold">{{ currentFullDate }}</span>
+          </p>
         </div>
-        <div style="flex: 1; font-size: 0.7rem; overflow-y: auto">
-          <strong
-            id="phase-label"
-            style="
-              display: block;
-              color: var(--phase-color);
-              margin-bottom: 4px;
-            "
-            >FASE</strong
+        <div class="flex flex-col items-end">
+          <span class="text-[10px] uppercase tracking-widest text-gray-500 mb-1"
+            >Produtividade</span
           >
-          <div id="skill-list">Nenhuma Habilidade</div>
+          <div class="bg-[#1e1e1e] px-4 py-2 rounded-lg border border-gray-800">
+            <span class="text-[#bb86fc] font-bold">{{ tasks.length }}</span>
+            <span class="text-gray-400 text-xs ml-2">tarefas totais</span>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div id="modal-overlay">
-        <div id="modal">
-          <h3 id="modal-title"></h3>
-          <p id="modal-question"></p>
-          <div id="modal-body"></div>
-          <div id="modal-footer" style="margin-top: 15px">
-            <button class="btn" onclick="closeModal()">FECHAR</button>
+      <div class="flex-1 overflow-x-auto">
+        <div class="flex gap-6 h-full pb-6" style="min-width: max-content">
+          <div
+            v-for="day in weekDays"
+            :key="day"
+            class="kanban-column flex flex-col w-80"
+            :class="{ 'is-today': day === currentDayName }"
+          >
+            <div
+              class="p-4 border-b border-gray-800 flex justify-between items-center"
+            >
+              <div class="flex items-center gap-2">
+                <h2
+                  class="font-bold text-sm uppercase tracking-tighter"
+                  :class="day === currentDayName ? 'text-[#bb86fc]' : 'text-gray-400'"
+                >
+                  {{ day }}
+                </h2>
+                <span
+                  v-if="day === currentDayName"
+                  class="text-[9px] bg-[#bb86fc] text-black px-1.5 rounded font-black"
+                  >HOJE</span
+                >
+              </div>
+              <span
+                class="text-xs bg-black/30 px-2 py-0.5 rounded-full text-gray-500"
+              >
+                {{ getTasksByDay(day).length }}
+              </span>
+            </div>
+
+            <div class="p-4 flex-1 overflow-y-auto space-y-3">
+              <div
+                v-for="task in getTasksByDay(day)"
+                :key="task.id"
+                class="task-card p-4 rounded-lg shadow-lg group cursor-pointer"
+                :class="{ 'completed': task.done }"
+                @click="toggleTask(task.id)"
+              >
+                <div class="flex justify-between items-start">
+                  <p class="text-sm font-medium leading-relaxed pr-4">
+                    {{ task.text }}
+                  </p>
+                  <button
+                    @click.stop="deleteTask(task.id)"
+                    class="text-gray-600 hover:text-red-400 transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div
+                  class="mt-3 flex items-center text-[10px] text-gray-500 font-mono"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-3 w-3 mr-1"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {{ task.time }}
+                </div>
+              </div>
+
+              <div class="pt-2">
+                <input
+                  v-if="addingTo === day"
+                  v-model="newTaskText"
+                  @keyup.enter="addTask(day)"
+                  @blur="cancelAdd"
+                  type="text"
+                  placeholder="Digite e aperte Enter..."
+                  class="w-full bg-black border border-[#bb86fc] rounded-lg p-3 text-sm outline-none shadow-[0_0_10px_rgba(187,134,252,0.2)]"
+                />
+
+                <button
+                  v-else
+                  @click="prepareAddTask(day)"
+                  class="w-full py-3 border border-dashed border-gray-700 rounded-lg text-gray-500 text-[10px] font-bold hover:bg-[#bb86fc]/5 hover:text-[#bb86fc] hover:border-[#bb86fc] transition-all tracking-widest uppercase"
+                >
+                  + Nova Tarefa
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div id="welcome-screen">
-        <div id="welcome-content">
-          <h1>Matrix Dev Escape</h1>
-          <p>Escolha uma fase para começar:</p>
-          <div id="phase-buttons"></div>
-        </div>
-      </div>
+      <footer
+        class="mt-4 pt-4 border-t border-gray-900 flex justify-between items-center text-gray-600 text-[11px]"
+      >
+        <p>Sincronizado via LocalStorage</p>
+        <p class="font-medium tracking-wide">
+          Feito com amor por <span class="text-gray-400">Elvis Huges</span> ❤️
+        </p>
+      </footer>
     </div>
 
     <script>
-      const gameFases = [
-        {
-          id: 0,
-          nome: "Criação de Projeto",
-          escuro: false,
-          color: "#00ff41",
-          data: {
-            "1,1": {
-              q: "Qual comando cria um novo projeto Node.js?",
-              a: "npm init",
-              skill: "NODE_INIT",
-            },
-            "2,4": {
-              q: "Qual tag HTML define a estrutura básica?",
-              a: "html",
-              skill: "HTML_BASIC",
-            },
-            "3,3": {
-              q: "Qual atributo define o título da página?",
-              a: "title",
-              skill: "HTML_TITLE",
-            },
-            "6,2": {
-              q: "Qual comando cria um arquivo vazio no Linux?",
-              a: "touch",
-              skill: "LINUX_TOUCH",
-            },
-            "1,2": {
-              q: "Qual palavra declara uma variável em JS?",
-              options: ["var", "let", "const"],
-              a: 1,
-              skill: "JS_VAR",
-            },
-            "5,5": { type: "EXIT" },
-          },
-        },
+      const { createApp, ref, onMounted, watch, computed } = Vue;
 
-        {
-          id: 1,
-          nome: "Front-end Básico",
-          escuro: true,
-          color: "#00d4ff",
-          data: {
-            "1,2": {
-              q: "Qual propriedade CSS define a cor de fundo?",
-              a: "background-color",
-              skill: "CSS_BACKGROUND",
-            },
-            "2,6": {
-              q: "Qual seletor CSS seleciona todos os elementos?",
-              a: "*",
-              skill: "CSS_SELECTOR",
-            },
-            "4,4": {
-              q: "Qual método JS adiciona um evento a um elemento?",
-              a: "addeventlistener",
-              skill: "JS_EVENT",
-            },
-            "6,1": {
-              q: "Qual função JS converte string para número?",
-              options: ["parseint", "tostring", "json.parse"],
-              a: 0,
-              skill: "JS_PARSEINT",
-            },
-            "9,9": { type: "EXIT" },
-          },
-        },
+      createApp({
+        setup() {
+          const weekDays = [
+            "Segunda",
+            "Terça",
+            "Quarta",
+            "Quinta",
+            "Sexta",
+            "Sábado",
+            "Domingo",
+          ];
+          const tasks = ref([]);
+          const addingTo = ref(null);
+          const newTaskText = ref("");
 
-        {
-          id: 2,
-          nome: "Back-end com Node.js",
-          escuro: true,
-          color: "#f05032",
-          data: {
-            "1,8": {
-              q: "Qual módulo Node.js cria um servidor HTTP?",
-              a: "http",
-              skill: "NODE_HTTP",
-            },
-            "3,2": {
-              q: "Qual método Express define uma rota GET?",
-              a: "get",
-              skill: "EXPRESS_GET",
-            },
-            "5,5": {
-              q: "Qual comando instala um pacote npm globalmente?",
-              a: "npm install -g",
-              skill: "NPM_GLOBAL",
-            },
-            "7,3": {
-              q: "Qual objeto Node.js representa o sistema de arquivos?",
-              options: ["fs", "path", "os"],
-              a: 0,
-              skill: "NODE_FS",
-            },
-            "9,9": { type: "EXIT" },
-          },
-        },
+          // Data atual formatada
+          const currentFullDate = computed(() => {
+            return new Intl.DateTimeFormat("pt-BR", {
+              dateStyle: "full",
+            }).format(new Date());
+          });
 
-        {
-          id: 3,
-          nome: "Versionamento com Git",
-          escuro: false,
-          color: "#42b883",
-          data: {
-            "2,2": {
-              q: "Qual comando inicializa um repositório Git?",
-              a: "git init",
-              skill: "GIT_INIT",
+          // Nome do dia atual para o destaque
+          const currentDayName = computed(() => {
+            const days = [
+              "Domingo",
+              "Segunda",
+              "Terça",
+              "Quarta",
+              "Quinta",
+              "Sexta",
+              "Sábado",
+            ];
+            return days[new Date().getDay()];
+          });
+
+          onMounted(() => {
+            const saved = localStorage.getItem("kanban_elvis");
+            if (saved) tasks.value = JSON.parse(saved);
+          });
+
+          watch(
+            tasks,
+            (val) => {
+              localStorage.setItem("kanban_elvis", JSON.stringify(val));
             },
-            "3,4": {
-              q: "Qual comando adiciona todos os arquivos ao stage?",
-              a: "git add .",
-              skill: "GIT_ADD_ALL",
-            },
-            "6,2": {
-              q: "Qual comando cria um commit com mensagem?",
-              a: "git commit -m",
-              skill: "GIT_COMMIT_M",
-            },
-            "7,6": {
-              q: "Qual comando envia commits para o repositório remoto?",
-              options: ["git push", "git pull", "git fetch"],
-              a: 0,
-              skill: "GIT_PUSH",
-            },
-            "9,9": { type: "EXIT" },
-          },
-        },
+            { deep: true }
+          );
 
-        {
-          id: 4,
-          nome: "Containerização com Docker",
-          escuro: true,
-          color: "#61dafb",
-          data: {
-            "1,3": {
-              q: "Qual comando constrói uma imagem Docker?",
-              a: "docker build",
-              skill: "DOCKER_BUILD",
-            },
-            "3,5": {
-              q: "Qual comando executa um container Docker?",
-              a: "docker run",
-              skill: "DOCKER_RUN",
-            },
-            "5,2": {
-              q: "Qual arquivo define as instruções de build no Docker?",
-              a: "dockerfile",
-              skill: "DOCKERFILE",
-            },
-            "7,7": {
-              q: "Qual comando lista containers em execução?",
-              options: ["docker ps", "docker images", "docker logs"],
-              a: 0,
-              skill: "DOCKER_PS",
-            },
-            "9,9": { type: "EXIT" },
-          },
-        },
+          const getTasksByDay = (day) =>
+            tasks.value.filter((t) => t.day === day);
 
-        {
-          id: 5,
-          nome: "Deploy na Nuvem AWS",
-          escuro: true,
-          color: "#3178c6",
-          data: {
-            "2,1": {
-              q: "Qual serviço AWS hospeda aplicações web?",
-              a: "ec2",
-              skill: "AWS_EC2",
-            },
-            "4,3": {
-              q: "Qual serviço AWS armazena arquivos estáticos?",
-              options: ["s3", "lambda", "rds"],
-              a: 0,
-              skill: "AWS_S3",
-            },
-            "5,6": {
-              q: "Qual comando CLI da AWS lista buckets S3?",
-              a: "aws s3 ls",
-              skill: "AWS_CLI_S3",
-            },
-            "7,2": {
-              q: "Qual serviço AWS executa código sem servidor?",
-              options: ["lambda", "ec2", "s3"],
-              a: 0,
-              skill: "AWS_LAMBDA",
-            },
-            "9,9": { type: "EXIT" },
-          },
-        },
-      ];
+          const prepareAddTask = (day) => {
+            addingTo.value = day;
+            setTimeout(() => document.querySelector("input")?.focus(), 50);
+          };
 
-      let currentFaseIdx = 0;
-      let inventory = [];
-      let currentCoord = "";
-
-      const world = document.getElementById("world");
-      const viewport = document.getElementById("viewport");
-      const minimap = document.getElementById("mini-map");
-      const dot = document.getElementById("player-dot");
-      const light = document.getElementById("map-light");
-      const worldMask = document.getElementById("world-mask");
-      const overlay = document.getElementById("modal-overlay");
-      const welcomeScreen = document.getElementById("welcome-screen");
-
-      function showWelcome() {
-        const phaseButtons = document.getElementById("phase-buttons");
-        phaseButtons.innerHTML = "";
-        gameFases.forEach((fase, idx) => {
-          const btn = document.createElement("button");
-          btn.className = "btn";
-          btn.innerText = `${fase.id + 1}. ${fase.nome}`;
-          btn.onclick = () => startGame(idx);
-          phaseButtons.appendChild(btn);
-        });
-        welcomeScreen.style.display = "flex";
-      }
-
-      function startGame(idx) {
-        welcomeScreen.style.display = "none";
-        loadPhase(idx);
-      }
-
-      function loadPhase(idx) {
-        currentFaseIdx = idx;
-        inventory = [];
-        world.innerHTML = "";
-        minimap.querySelectorAll(".task-node").forEach((n) => n.remove());
-
-        const fase = gameFases[idx];
-
-        document.documentElement.style.setProperty("--phase-color", fase.color);
-        document.getElementById("phase-label").innerText = "FASE: " + fase.nome;
-        document.getElementById("top-phase-name").innerText =
-          "FASE: " + fase.nome;
-        updateInventoryUI();
-
-        worldMask.style.display = fase.escuro ? "block" : "none";
-        light.style.display = fase.escuro ? "block" : "none";
-
-        for (let r = 0; r < 10; r++) {
-          for (let c = 0; c < 10; c++) {
-            const coord = `${c},${r}`;
-            const sec = document.createElement("section");
-            sec.className = "section";
-
-            if (fase.data[coord]) {
-              const node = document.createElement("div");
-              node.className = "task-node";
-              node.id = `node-${coord}`;
-              node.style.left = `${c * 10 + 5}%`;
-              node.style.top = `${r * 10 + 5}%`;
-              node.style.opacity = fase.escuro ? "0" : "1";
-              if (fase.data[coord].type === "EXIT")
-                node.style.background = "gold";
-              minimap.appendChild(node);
-
-              const isExit = fase.data[coord].type === "EXIT";
-              sec.innerHTML = `<h2>[ ${
-                isExit ? "Saída" : "Habilidade"
-              } ${coord} ]</h2>
-                <button class="btn" onclick="${
-                  isExit ? "checkExit()" : `openTerminal('${coord}')`
-                }">${isExit ? "DESBLOQUEAR" : "ACESSAR"}</button>`;
-            } else {
-              sec.innerHTML = `<span class="coord-label">${coord}</span>`;
+          const addTask = (day) => {
+            if (newTaskText.value.trim()) {
+              tasks.value.push({
+                id: Date.now(),
+                day: day,
+                text: newTaskText.value,
+                done: false,
+                time: new Date().toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
+              });
             }
-            world.appendChild(sec);
-          }
-        }
-        viewport.scrollTo(0, 0);
-      }
+            cancelAdd();
+          };
 
-      function openTerminal(coord) {
-        currentCoord = coord;
-        const data = gameFases[currentFaseIdx].data[coord];
-        document.getElementById("modal-title").innerText = "TERMINAL " + coord;
-        document.getElementById("modal-question").innerText = data.q;
-        const body = document.getElementById("modal-body");
-        body.innerHTML = "";
+          const cancelAdd = () => {
+            addingTo.value = null;
+            newTaskText.value = "";
+          };
+          const toggleTask = (id) => {
+            const t = tasks.value.find((x) => x.id === id);
+            if (t) t.done = !t.done;
+          };
+          const deleteTask = (id) => {
+            tasks.value = tasks.value.filter((x) => x.id !== id);
+          };
 
-        if (data.options) {
-          data.options.forEach((opt, i) => {
-            const b = document.createElement("button");
-            b.className = "btn";
-            b.style.width = "100%";
-            b.innerText = opt;
-            b.onclick = () => validate(i);
-            body.appendChild(b);
-          });
-        } else {
-          body.innerHTML = `<input type="text" id="ans" placeholder="Resposta..." autocomplete="off">
-                           <button class="btn" style="width:100%" onclick="validate()">EXECUTAR</button>`;
-          setTimeout(() => document.getElementById("ans").focus(), 150);
-        }
-        overlay.style.display = "flex";
-      }
-
-      function validate(choiceIdx = null) {
-        const data = gameFases[currentFaseIdx].data[currentCoord];
-        let isCorrect = false;
-
-        if (choiceIdx !== null) isCorrect = choiceIdx === data.a;
-        else
-          isCorrect =
-            document.getElementById("ans").value.toLowerCase().trim() ===
-            data.a;
-
-        if (isCorrect) {
-          if (!inventory.includes(data.skill)) inventory.push(data.skill);
-          document.getElementById(`node-${currentCoord}`).style.background =
-            "#fff";
-          updateInventoryUI();
-          closeModal();
-        } else {
-          document.getElementById("modal-question").innerText =
-            "ACESSO NEGADO - TENTE NOVAMENTE";
-        }
-      }
-
-      function checkExit() {
-        const faseData = gameFases[currentFaseIdx].data;
-        const requiredSkills = new Set(
-          Object.values(faseData)
-            .filter((d) => d.skill)
-            .map((d) => d.skill)
-        );
-        const collectedSkills = new Set(inventory);
-        const allCollected = [...requiredSkills].every((skill) =>
-          collectedSkills.has(skill)
-        );
-
-        document.getElementById("modal-title").innerText = allCollected
-          ? "DESBLOQUEAR SAÍDA"
-          : "SAÍDA BLOQUEADA";
-        document.getElementById("modal-question").innerText =
-          "Habilidades necessárias:";
-
-        const body = document.getElementById("modal-body");
-        body.innerHTML = "<ul>";
-        requiredSkills.forEach((skill) => {
-          const collected = collectedSkills.has(skill);
-          body.innerHTML += `<li class="${
-            collected ? "skill-collected" : "skill-missing"
-          }">${skill}</li>`;
-        });
-        body.innerHTML += "</ul>";
-
-        const footer = document.getElementById("modal-footer");
-        footer.innerHTML = allCollected
-          ? `<button class="btn" onclick="unlockExit()">DESBLOQUEAR</button>`
-          : `<button class="btn" onclick="closeModal()">FECHAR</button>`;
-
-        overlay.style.display = "flex";
-      }
-
-      function unlockExit() {
-        closeModal();
-        if (currentFaseIdx < gameFases.length - 1) {
-          loadPhase(currentFaseIdx + 1);
-        } else {
-          document.getElementById("modal-title").innerText = "SISTEMA INVASO";
-          document.getElementById("modal-question").innerText =
-            "Você escapou da Matrix.";
-          document.getElementById("modal-body").innerHTML = "";
-          document.getElementById(
-            "modal-footer"
-          ).innerHTML = `<button class="btn" onclick="closeModal()">FECHAR</button>`;
-          overlay.style.display = "flex";
-        }
-      }
-
-      function updateInventoryUI() {
-        const list = document.getElementById("skill-list");
-        const topProg = document.getElementById("top-progress");
-        const faseData = gameFases[currentFaseIdx].data;
-        const required = Object.keys(faseData).filter(
-          (k) => faseData[k].skill
-        ).length;
-
-        list.innerHTML = inventory.length
-          ? inventory.map((s) => `<span class="skill-tag">${s}</span>`).join("")
-          : "Nenhuma Habilidade";
-        topProg.innerText = `NODOS: ${inventory.length}/${required}`;
-      }
-
-      function closeModal() {
-        overlay.style.display = "none";
-      }
-
-      viewport.addEventListener("scroll", () => {
-        const pctX =
-          viewport.scrollLeft /
-          (viewport.scrollWidth - viewport.clientWidth || 1);
-        const pctY =
-          viewport.scrollTop /
-          (viewport.scrollHeight - viewport.clientHeight || 1);
-        const mapW = minimap.clientWidth;
-        const mapH = minimap.clientHeight;
-        const posX = pctX * (mapW * 0.9) + mapW * 0.05;
-        const posY = pctY * (mapH * 0.9) + mapH * 0.05;
-
-        dot.style.left = posX + "px";
-        dot.style.top = posY + "px";
-
-        if (gameFases[currentFaseIdx].escuro) {
-          light.style.background = `radial-gradient(circle 40px at ${posX}px ${posY}px, rgba(255,255,255,0.2) 0%, #000 100%)`;
-          const vx = viewport.scrollLeft + viewport.clientWidth / 2;
-          const vy = viewport.scrollTop + viewport.clientHeight / 2;
-          worldMask.style.setProperty("--vx", vx + "px");
-          worldMask.style.setProperty("--vy", vy + "px");
-
-          minimap.querySelectorAll(".task-node").forEach((node) => {
-            const nx = (parseFloat(node.style.left) * mapW) / 100;
-            const ny = (parseFloat(node.style.top) * mapH) / 100;
-            const d = Math.hypot(nx - posX, ny - posY);
-            node.style.opacity = d < 40 ? "1" : "0";
-          });
-        } else {
-          minimap
-            .querySelectorAll(".task-node")
-            .forEach((n) => (n.style.opacity = "1"));
-        }
-      });
-
-      showWelcome();
+          return {
+            weekDays,
+            tasks,
+            addingTo,
+            newTaskText,
+            currentFullDate,
+            currentDayName,
+            getTasksByDay,
+            prepareAddTask,
+            addTask,
+            cancelAdd,
+            toggleTask,
+            deleteTask,
+          };
+        },
+      }).mount("#app");
     </script>
   </body>
 </html>
