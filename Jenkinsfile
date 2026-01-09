@@ -12,7 +12,7 @@ pipeline {
         }
         stage('Build Image') {
             steps {
-              sh 'docker build -t raj80dockerid/jenkinstest:$BUILD_NUMBER ./'
+              sh 'docker build -t elvishuges123/kanban-vuejs:$BUILD_NUMBER ./'
             }
         }
         stage('Docker Login') {
@@ -23,8 +23,8 @@ pipeline {
             }
         stage('Docker Push') {
             steps {
-		//sh 'docker push raj80dockerid/jenkinstest' (this will use the tag latest)    
-                sh 'docker push raj80dockerid/jenkinstest:$BUILD_NUMBER'
+		        //sh 'docker push elvishuges123/kanban-vuejs' (this will use the tag latest)    
+                sh 'docker push elvishuges123/kanban-vuejs:$BUILD_NUMBER'
                 }
             }
         }
